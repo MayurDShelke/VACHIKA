@@ -23,7 +23,7 @@ dependencies:
   # ── Camera & Media ──────────────────────────────────────
   camera: ^0.11.1
   video_player: ^2.9.5
-  record: ^5.2.2
+  record: ^7.2.0
   permission_handler: ^11.4.0
   path_provider: ^2.1.6
 

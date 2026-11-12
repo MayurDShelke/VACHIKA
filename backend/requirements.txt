@@ -1,0 +1,35 @@
+# ── Core Framework ──────────────────────────────────────────
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+pydantic==2.11.3
+pydantic-settings==2.9.1
+python-multipart==0.0.20
+python-dotenv==1.1.0
+
+# ── AI / ML ────────────────────────────────────────────────
+torch==2.7.0
+torchaudio==2.7.0
+numpy==2.2.6
+opencv-python-headless==4.11.0.86
+mediapipe==0.10.24
+openai-whisper==20250625
+
+# ── Database & Storage ─────────────────────────────────────
+supabase==2.15.2
+
+# ── NLP Utilities ──────────────────────────────────────────
+nltk==3.9.1
+
+# ── HTTP & Networking ──────────────────────────────────────
+httpx==0.28.1
+
+# ── Security & Middleware ──────────────────────────────────
+slowapi==0.1.9
+
+# ── Logging & Monitoring ──────────────────────────────────
+loguru==0.7.3
+
+# ── Testing ────────────────────────────────────────────────
+pytest==8.3.5
+pytest-asyncio==0.25.3
+httpx==0.28.1

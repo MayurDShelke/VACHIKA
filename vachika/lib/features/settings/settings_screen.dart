@@ -135,7 +135,7 @@ class _SettingsToggle extends StatelessWidget {
       subtitle: Text(subtitle, style: AppTypography.supporting),
       value: value,
       onChanged: onChanged,
-      activeColor: AppColors.forestSage,
+      activeThumbColor: AppColors.forestSage,
       shape: RoundedRectangleBorder(borderRadius: AppSpacing.borderRadiusCard),
     );
   }

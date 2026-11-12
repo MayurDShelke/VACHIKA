@@ -10,6 +10,7 @@ import '../../features/conversation/conversation_screen.dart';
 import '../../features/dictionary/dictionary_screen.dart';
 import '../../features/history/history_screen.dart';
 import '../../features/settings/settings_screen.dart';
+import '../widgets/split_nav_bar.dart';
 
 /// Route path constants for type-safe navigation.
 class AppRoutes {
@@ -118,17 +119,23 @@ class _ScaffoldWithNav extends StatelessWidget {
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: index,
-        onTap: (i) => context.go(_tabs[i].route),
-        items: _tabs
-            .map(
-              (tab) => BottomNavigationBarItem(
-                icon: Icon(tab.icon),
-                label: tab.label,
-              ),
-            )
-            .toList(),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: SplitNavBar(
+            currentIndex: index,
+            onTap: (i) => context.go(_tabs[i].route),
+            items: _tabs
+                .map(
+                  (tab) => SplitNavItem(
+                    icon: tab.icon,
+                    label: tab.label,
+                  ),
+                )
+                .toList(),
+          ),
+        ),
       ),
     );
   }

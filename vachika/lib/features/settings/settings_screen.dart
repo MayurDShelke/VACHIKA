@@ -1,37 +1,146 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/routing/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/language_selector.dart';
+import '../auth/providers/auth_provider.dart';
 
 /// Settings screen.
 ///
 /// Per DESIGN.md §5: language, text size, accessibility,
 /// notifications, haptics, motion, camera/mic permissions,
 /// privacy, history, account.
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _language = 'en';
   bool _highContrast = false;
   bool _haptics = true;
   bool _reducedMotion = false;
   bool _historyEnabled = true;
-  // TODO: Persist settings with shared_preferences via Riverpod
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authNotifierProvider);
+    final user = authState.user;
+    final isGuest = authState.isGuest;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: AppSpacing.screenPadding,
         children: [
+          // ── Account / Profile ─────────────────────────────
+          Text('Account', style: AppTypography.sectionHeading),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.stone,
+              borderRadius: AppSpacing.borderRadiusCard,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: AppColors.forestSage,
+                      child: Text(
+                        (user?.name.isNotEmpty ?? false)
+                            ? user!.name[0].toUpperCase()
+                            : 'G',
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.name ?? 'Guest User',
+                            style: AppTypography.cardHeading,
+                          ),
+                          Text(
+                            isGuest ? 'Temporary guest session' : (user?.email ?? ''),
+                            style: AppTypography.supporting,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (user != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.forestSage.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isGuest ? 'GUEST' : user.role.toUpperCase(),
+                          style: AppTypography.label.copyWith(
+                            color: AppColors.forestSage,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (isGuest) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => context.push(AppRoutes.login),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: AppColors.white,
+                        side: const BorderSide(color: AppColors.forestSage),
+                      ),
+                      child: const Text('Sign In or Register'),
+                    ),
+                  ),
+                ] else ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        await ref.read(authNotifierProvider.notifier).signOut();
+                        if (context.mounted) {
+                          context.go(AppRoutes.cover);
+                        }
+                      },
+                      icon: const Icon(Icons.logout_rounded, size: 18),
+                      label: const Text('Sign Out'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                        side: const BorderSide(color: AppColors.error),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const Divider(height: AppSpacing.xl),
+
           // ── Language ──────────────────────────────────────
           Text('Language', style: AppTypography.sectionHeading),
           const SizedBox(height: AppSpacing.sm),

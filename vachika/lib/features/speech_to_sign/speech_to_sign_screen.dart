@@ -4,7 +4,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_text_field.dart';
-import '../../core/widgets/language_selector.dart';
 
 /// Speech to Sign screen.
 ///
@@ -40,13 +39,6 @@ class _SpeechToSignScreenState extends State<SpeechToSignScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Language Selector ──────────────────────────
-              LanguageSelector(
-                selected: _language,
-                onChanged: (lang) => setState(() => _language = lang),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
               // ── Mic Button ─────────────────────────────────
               Center(
                 child: GestureDetector(

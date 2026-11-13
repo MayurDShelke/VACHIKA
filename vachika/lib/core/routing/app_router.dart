@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/splash/splash_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
+import '../../features/auth/screens/cover_screen.dart';
+import '../../features/auth/screens/login_screen.dart';
+import '../../features/auth/screens/signup_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/sign_to_speech/sign_to_speech_screen.dart';
 import '../../features/speech_to_sign/speech_to_sign_screen.dart';
@@ -17,6 +20,9 @@ class AppRoutes {
   AppRoutes._();
 
   static const String splash       = '/';
+  static const String cover        = '/cover';
+  static const String login        = '/login';
+  static const String signUp       = '/signup';
   static const String onboarding   = '/onboarding';
   static const String home         = '/home';
   static const String signToSpeech = '/sign-to-speech';
@@ -38,6 +44,18 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.splash,
       builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.cover,
+      builder: (context, state) => const CoverScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.login,
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.signUp,
+      builder: (context, state) => const SignUpScreen(),
     ),
     GoRoute(
       path: AppRoutes.onboarding,

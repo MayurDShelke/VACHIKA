@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -6,18 +7,19 @@ import '../../core/routing/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_spacing.dart';
+import '../auth/providers/auth_provider.dart';
 
 /// Splash screen — logo, app name, tagline, simple loading.
 ///
-/// Auto-navigates to onboarding (first launch) or home after a short delay.
-class SplashScreen extends StatefulWidget {
+/// Automatically checks session state and navigates to Cover or Home.
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -25,10 +27,16 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      // TODO: Check shared_preferences for onboarding-completed flag
+    // Brief splash delay for branding
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (!mounted) return;
+
+    final authState = ref.read(authNotifierProvider);
+
+    if (authState.isAuthenticated) {
       context.go(AppRoutes.home);
+    } else {
+      context.go(AppRoutes.cover);
     }
   }
 
@@ -40,22 +48,44 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Logo placeholder
+            // Logo Image
             Container(
-              width: 100,
-              height: 100,
+              width: 120,
+              height: 120,
               decoration: BoxDecoration(
-                color: AppColors.forestSage,
-                borderRadius: AppSpacing.borderRadiusCard,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.forestSage.withValues(alpha: 0.15),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              child: const Icon(
-                Icons.sign_language_rounded,
-                size: 56,
-                color: AppColors.white,
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                'assets/images/vachika_logo.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: AppColors.forestSage,
+                  child: const Center(
+                    child: Icon(
+                      Icons.sign_language_rounded,
+                      size: 56,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text(AppConstants.appName, style: AppTypography.mainHeading),
+            Text(
+              AppConstants.appName,
+              style: AppTypography.mainHeading.copyWith(
+                letterSpacing: 2,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               AppConstants.tagline,

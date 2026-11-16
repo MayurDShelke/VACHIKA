@@ -4,7 +4,8 @@ import 'package:flutter/services.dart';
 
 import '../../data/models/sign_entry.dart';
 import '../theme/app_colors.dart';
-import 'isl_avatar/isl_human_avatar.dart';
+import 'real_human_sign_player.dart';
+import 'three_d_avatar_web_view.dart';
 
 /// Interactive Sign Player widget for sequential ISL sign playback.
 ///
@@ -35,6 +36,7 @@ class _SignPlayerState extends State<SignPlayer> {
   bool _isPlaying = false;
   double _playbackSpeed = 1.0;
   Timer? _playbackTimer;
+  bool _showRealHuman = false;
 
   late final ScrollController _timelineScrollController;
 
@@ -220,16 +222,16 @@ class _SignPlayerState extends State<SignPlayer> {
         children: [
           // ── Header Bar: Step count & Speed selector ─────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 10),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Step Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF3F5F4),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -238,17 +240,122 @@ class _SignPlayerState extends State<SignPlayer> {
                         currentItem.isFingerspelled
                             ? Icons.text_fields_rounded
                             : Icons.sign_language_rounded,
-                        size: 13,
+                        size: 12,
                         color: AppColors.forestSage,
                       ),
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 4),
                       Text(
-                        '${_currentIndex + 1} of ${widget.items.length}',
+                        '${_currentIndex + 1}/${widget.items.length}',
                         style: const TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF344C43),
-                          letterSpacing: 0.2,
+                          letterSpacing: 0.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Hybrid Mode Switcher (3D Avatar vs Real Human) ──
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F5F4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE5EAE7)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _showRealHuman = false);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: !_showRealHuman ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(9),
+                            boxShadow: !_showRealHuman
+                                ? [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.05),
+                                      blurRadius: 3,
+                                    )
+                                  ]
+                                : null,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.person_rounded,
+                                size: 12,
+                                color: !_showRealHuman
+                                    ? AppColors.forestSage
+                                    : const Color(0xFF6B7280),
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                '3D',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight:
+                                      !_showRealHuman ? FontWeight.w700 : FontWeight.w500,
+                                  color: !_showRealHuman
+                                      ? const Color(0xFF202522)
+                                      : const Color(0xFF6B7280),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _showRealHuman = true);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _showRealHuman ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(9),
+                            boxShadow: _showRealHuman
+                                ? [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.05),
+                                      blurRadius: 3,
+                                    )
+                                  ]
+                                : null,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.videocam_rounded,
+                                size: 12,
+                                color: _showRealHuman
+                                    ? const Color(0xFF2563EB)
+                                    : const Color(0xFF6B7280),
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                'Real',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight:
+                                      _showRealHuman ? FontWeight.w700 : FontWeight.w500,
+                                  color: _showRealHuman
+                                      ? const Color(0xFF1D4ED8)
+                                      : const Color(0xFF6B7280),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -258,12 +365,12 @@ class _SignPlayerState extends State<SignPlayer> {
                 // Speed Pill Button
                 InkWell(
                   onTap: _cycleSpeed,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                     decoration: BoxDecoration(
                       color: AppColors.forestSage.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: AppColors.forestSage.withValues(alpha: 0.2),
                         width: 1,
@@ -274,14 +381,14 @@ class _SignPlayerState extends State<SignPlayer> {
                       children: [
                         const Icon(
                           Icons.speed_rounded,
-                          size: 13,
+                          size: 12,
                           color: AppColors.forestSage,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
                         Text(
                           '${_playbackSpeed}x',
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: AppColors.forestSage,
                           ),
@@ -340,15 +447,23 @@ class _SignPlayerState extends State<SignPlayer> {
                     ),
                   ],
 
-                  // Dynamic AI Human Avatar (Articulated Arms & Hands)
-                  IslHumanAvatar(
-                    gloss: sign.gloss,
-                    isFingerspelled: currentItem.isFingerspelled,
-                    accentColor: category.color,
-                    isPlaying: _isPlaying,
-                    speed: _playbackSpeed,
-                    height: 230,
-                  ),
+                  // Dynamic Hybrid Stage: Real Human Signer vs 3D WebGL Rigged Avatar
+                  _showRealHuman
+                      ? RealHumanSignPlayer(
+                          sign: sign,
+                          isPlaying: _isPlaying,
+                          speed: _playbackSpeed,
+                          height: 250,
+                          onToggleToAvatar: () =>
+                              setState(() => _showRealHuman = false),
+                        )
+                      : ThreeDAvatarWebView(
+                          key: const ValueKey('three_d_avatar_stage'),
+                          gloss: sign.gloss,
+                          isPlaying: _isPlaying,
+                          speed: _playbackSpeed,
+                          height: 250,
+                        ),
 
                   const SizedBox(height: 14),
 
@@ -396,6 +511,43 @@ class _SignPlayerState extends State<SignPlayer> {
                         ),
                       ),
                     ],
+                  ),
+
+                  // Handshape & Palm Orientation Clarity Badge
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: category.color.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.pan_tool_alt_rounded,
+                          size: 13,
+                          color: category.color,
+                        ),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            '${sign.handShapeName} • ${sign.handOrientation}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF374151),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 14),

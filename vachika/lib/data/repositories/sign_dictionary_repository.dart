@@ -127,6 +127,8 @@ class SignDictionaryRepository {
       category: SignCategory.greeting,
       description: 'Open palm facing outward near forehead, move it slightly forward like a friendly wave.',
       icon: Icons.waving_hand_rounded,
+      handShapeName: 'Open 5-Hand',
+      handOrientation: 'Palm facing outward at temple',
     ),
     'GOODBYE': const SignEntry(
       gloss: 'GOODBYE',
@@ -134,6 +136,8 @@ class SignDictionaryRepository {
       category: SignCategory.greeting,
       description: 'Open palm facing outward, wave it side to side a few times.',
       icon: Icons.waving_hand_rounded,
+      handShapeName: 'Open 5-Hand',
+      handOrientation: 'Palm facing outward, waving side-to-side',
     ),
     'THANK-YOU': const SignEntry(
       gloss: 'THANK-YOU',
@@ -141,6 +145,8 @@ class SignDictionaryRepository {
       category: SignCategory.greeting,
       description: 'Touch fingertips to chin, then move hand forward and slightly down with palm up.',
       icon: Icons.favorite_rounded,
+      handShapeName: 'Flat B-Hand',
+      handOrientation: 'Fingertips to chin, palm tilting upward',
     ),
     'PLEASE': const SignEntry(
       gloss: 'PLEASE',
@@ -148,6 +154,8 @@ class SignDictionaryRepository {
       category: SignCategory.greeting,
       description: 'Place flat palm on chest and make a circular motion.',
       icon: Icons.volunteer_activism_rounded,
+      handShapeName: 'Flat B-Hand',
+      handOrientation: 'Palm flat on chest, circular movement',
     ),
     'SORRY': const SignEntry(
       gloss: 'SORRY',
@@ -155,6 +163,8 @@ class SignDictionaryRepository {
       category: SignCategory.greeting,
       description: 'Make a fist (A hand), circle it over the chest area.',
       icon: Icons.sentiment_dissatisfied_rounded,
+      handShapeName: 'Fist A-Hand',
+      handOrientation: 'Fist rubbing chest in circle',
     ),
     'WELCOME': const SignEntry(
       gloss: 'WELCOME',
@@ -192,6 +202,8 @@ class SignDictionaryRepository {
       category: SignCategory.pronoun,
       description: 'Point index finger at your own chest.',
       icon: Icons.person_rounded,
+      handShapeName: 'Index D-Hand',
+      handOrientation: 'Index pointing directly to chest',
     ),
     'YOU': const SignEntry(
       gloss: 'YOU',
@@ -199,6 +211,8 @@ class SignDictionaryRepository {
       category: SignCategory.pronoun,
       description: 'Point index finger toward the other person.',
       icon: Icons.person_outline_rounded,
+      handShapeName: 'Index D-Hand',
+      handOrientation: 'Index pointing straight to viewer',
     ),
     'HE': const SignEntry(
       gloss: 'HE',

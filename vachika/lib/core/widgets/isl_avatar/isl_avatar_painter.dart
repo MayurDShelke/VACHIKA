@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 
 import 'isl_avatar_pose.dart';
 
-/// Custom Painter that renders the 2.5D Human AI Signer Avatar.
+/// Ultra-Realistic 3D Volumetric Human AI Signer Avatar.
 ///
-/// Draws:
-/// - Luminous backlit stage
-/// - Head, hair, facial expressions (eyes blink, eyebrows lift, mouth moves)
-/// - Modern stylized outfit (Forest Sage collar & upper body)
-/// - Left & Right articulated arms with inverse kinematics
-/// - High-fidelity hands with dynamic finger positioning
+/// Features:
+/// - Realistic human face anatomy (eyes with irises & reflections, eyelids, nose bridge, lips, ears, styled 3D hair)
+/// - Realistic volumetric neck with collarbone definition & modern tailored outfit
+/// - Anatomically proportioned 3D arms with volumetric depth
+/// - High-fidelity 3D hands with realistic palm flesh, knuckles, finger segments & fingernail highlights
+/// - Hand drop shadows onto torso indicating true 3D depth in sign space
 class IslAvatarPainter extends CustomPainter {
   final AvatarPose pose;
   final bool isDark;
@@ -27,43 +27,44 @@ class IslAvatarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
-    // Anchor neck / center of chest
-    final neckY = size.height * 0.36 + breathingOffset;
+    final neckY = size.height * 0.38 + breathingOffset;
     final neckCenter = Offset(cx, neckY);
 
-    // ── 1. Soft Ambient Halo Behind Avatar ───────────────────
+    // ── 1. Soft Ambient Halo Behind Head ─────────────────────
     final haloPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          accentColor.withValues(alpha: isDark ? 0.22 : 0.35),
+          accentColor.withValues(alpha: isDark ? 0.25 : 0.32),
           accentColor.withValues(alpha: 0.0),
         ],
       ).createShader(
-        Rect.fromCircle(center: Offset(cx, neckY - 20), radius: size.width * 0.46),
+        Rect.fromCircle(
+          center: Offset(cx, neckY - 24),
+          radius: size.width * 0.44,
+        ),
       );
-    canvas.drawCircle(Offset(cx, neckY - 20), size.width * 0.46, haloPaint);
+    canvas.drawCircle(Offset(cx, neckY - 24), size.width * 0.44, haloPaint);
 
-    // ── 2. Torso / Outfit ───────────────────────────────────
-    _drawTorso(canvas, neckCenter, size);
+    // ── 2. Realistic Torso & Shoulders ───────────────────────
+    _drawRealisticTorso(canvas, neckCenter, size);
 
-    // ── 3. Head, Hair & Facial Features ─────────────────────
-    _drawHeadAndFace(canvas, neckCenter);
+    // ── 3. Realistic Head, Hair & Expressive Face ────────────
+    _drawRealisticHeadAndFace(canvas, neckCenter);
 
-    // ── 4. Arms & Hands ─────────────────────────────────────
-    // Draw left arm (behind or to left)
-    _drawArmAndHand(
+    // ── 4. Left Arm & Hand ──────────────────────────────────
+    _drawVolumetricArmAndHand(
       canvas: canvas,
-      shoulder: Offset(neckCenter.dx - 48, neckCenter.dy + 20),
+      shoulder: Offset(neckCenter.dx - 52, neckCenter.dy + 24),
       handTarget: neckCenter + pose.leftHandTarget,
       isRightArm: false,
       handShape: pose.leftHandShape,
       wristRotation: pose.leftWristRotation,
     );
 
-    // Draw right arm (prominent signing arm)
-    _drawArmAndHand(
+    // ── 5. Right Arm & Hand (Primary Dominant Signer Arm) ───
+    _drawVolumetricArmAndHand(
       canvas: canvas,
-      shoulder: Offset(neckCenter.dx + 48, neckCenter.dy + 20),
+      shoulder: Offset(neckCenter.dx + 52, neckCenter.dy + 24),
       handTarget: neckCenter + pose.rightHandTarget,
       isRightArm: true,
       handShape: pose.rightHandShape,
@@ -71,38 +72,38 @@ class IslAvatarPainter extends CustomPainter {
     );
   }
 
-  // ── DRAW TORSO ─────────────────────────────────────────────
-  void _drawTorso(Canvas canvas, Offset neckCenter, Size size) {
-    final outfitColor =
-        isDark ? const Color(0xFF1E2824) : const Color(0xFF344C43);
+  // ── DRAW REALISTIC TORSO ───────────────────────────────────
+  void _drawRealisticTorso(Canvas canvas, Offset neckCenter, Size size) {
+    final outfitBase =
+        isDark ? const Color(0xFF1D2622) : const Color(0xFF2E423B);
+    final outfitHighlight =
+        isDark ? const Color(0xFF283630) : const Color(0xFF3E574E);
     final outfitShadow =
-        isDark ? const Color(0xFF151C19) : const Color(0xFF263731);
+        isDark ? const Color(0xFF131A17) : const Color(0xFF1F2D28);
 
+    // Torso silhouette with natural shoulder slopes
     final torsoPath = Path();
-    torsoPath.moveTo(neckCenter.dx - 18, neckCenter.dy + 8);
-    // Left shoulder slope
+    torsoPath.moveTo(neckCenter.dx - 18, neckCenter.dy + 12);
+    // Left shoulder curve
     torsoPath.cubicTo(
       neckCenter.dx - 38,
-      neckCenter.dy + 12,
-      neckCenter.dx - 64,
-      neckCenter.dy + 26,
-      neckCenter.dx - 82,
-      neckCenter.dy + 56,
+      neckCenter.dy + 14,
+      neckCenter.dx - 68,
+      neckCenter.dy + 28,
+      neckCenter.dx - 92,
+      neckCenter.dy + 58,
     );
-    // Left torso side down
-    torsoPath.lineTo(neckCenter.dx - 90, size.height);
-    // Bottom
-    torsoPath.lineTo(neckCenter.dx + 90, size.height);
-    // Right torso side up
-    torsoPath.lineTo(neckCenter.dx + 82, neckCenter.dy + 56);
-    // Right shoulder slope
+    torsoPath.lineTo(neckCenter.dx - 98, size.height);
+    torsoPath.lineTo(neckCenter.dx + 98, size.height);
+    torsoPath.lineTo(neckCenter.dx + 92, neckCenter.dy + 58);
+    // Right shoulder curve
     torsoPath.cubicTo(
-      neckCenter.dx + 64,
-      neckCenter.dy + 26,
+      neckCenter.dx + 68,
+      neckCenter.dy + 28,
       neckCenter.dx + 38,
-      neckCenter.dy + 12,
+      neckCenter.dy + 14,
       neckCenter.dx + 18,
-      neckCenter.dy + 8,
+      neckCenter.dy + 12,
     );
     torsoPath.close();
 
@@ -110,159 +111,221 @@ class IslAvatarPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [outfitColor, outfitShadow],
-      ).createShader(Rect.fromLTWH(0, neckCenter.dy, size.width, size.height));
+        colors: [outfitHighlight, outfitBase, outfitShadow],
+        stops: const [0.0, 0.45, 1.0],
+      ).createShader(
+        Rect.fromLTWH(0, neckCenter.dy, size.width, size.height - neckCenter.dy),
+      );
 
     canvas.drawPath(torsoPath, torsoPaint);
 
-    // Elegant Collar / Lapel line
-    final collarPaint = Paint()
-      ..color = const Color(0xFFA5CDB6).withValues(alpha: 0.4)
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-
-    final collarPath = Path();
-    collarPath.moveTo(neckCenter.dx - 18, neckCenter.dy + 8);
-    collarPath.lineTo(neckCenter.dx, neckCenter.dy + 34);
-    collarPath.lineTo(neckCenter.dx + 18, neckCenter.dy + 8);
-    canvas.drawPath(collarPath, collarPaint);
-  }
-
-  // ── DRAW HEAD AND FACE ─────────────────────────────────────
-  void _drawHeadAndFace(Canvas canvas, Offset neckCenter) {
-    canvas.save();
-    canvas.translate(neckCenter.dx, neckCenter.dy - 12);
-    canvas.rotate(pose.headTilt);
-
-    // Neck
-    final skinTone = isDark ? const Color(0xFFE2C4A7) : const Color(0xFFF3D5B9);
-    final skinShadow = isDark ? const Color(0xFFCAAA8E) : const Color(0xFFDCBEA3);
-
-    final neckPaint = Paint()..color = skinShadow;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(-14, -14, 28, 28),
-        const Radius.circular(8),
-      ),
-      neckPaint,
+    // Realistic Collar / Turtleneck with subtle 3D rim highlight
+    final collarRect = Rect.fromCenter(
+      center: Offset(neckCenter.dx, neckCenter.dy + 10),
+      width: 44,
+      height: 18,
     );
-
-    // Head Base Oval
-    final headRect = const Rect.fromLTWH(-32, -88, 64, 82);
-    final headPaint = Paint()
+    final collarPaint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [skinTone, skinShadow],
-      ).createShader(headRect);
+        colors: [
+          const Color(0xFFA5CDB6).withValues(alpha: 0.35),
+          outfitBase,
+        ],
+      ).createShader(collarRect);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(collarRect, const Radius.circular(8)),
+      collarPaint,
+    );
+  }
 
-    canvas.drawOval(headRect, headPaint);
+  // ── DRAW REALISTIC HEAD AND FACE ───────────────────────────
+  void _drawRealisticHeadAndFace(Canvas canvas, Offset neckCenter) {
+    canvas.save();
+    canvas.translate(neckCenter.dx, neckCenter.dy - 10);
+    canvas.rotate(pose.headTilt);
 
-    // Ears
+    // Realistic Human Skin Palette (Natural warm complexion)
+    final skinBase =
+        isDark ? const Color(0xFFE2C4A7) : const Color(0xFFF3D5B9);
+    final skinShadow =
+        isDark ? const Color(0xFFC7A588) : const Color(0xFFDBB89A);
+    final skinHighlight =
+        isDark ? const Color(0xFFEED3B8) : const Color(0xFFFDE4CD);
+
+    // 1. Volumetric Neck with side shadows
+    final neckPath = Path();
+    neckPath.moveTo(-15, -16);
+    neckPath.lineTo(15, -16);
+    neckPath.lineTo(19, 14);
+    neckPath.lineTo(-19, 14);
+    neckPath.close();
+
+    final neckPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [skinShadow, skinBase, skinShadow],
+      ).createShader(const Rect.fromLTWH(-20, -16, 40, 30));
+    canvas.drawPath(neckPath, neckPaint);
+
+    // 2. Realistic Head & Jaw Contour
+    final headPath = Path();
+    headPath.moveTo(-32, -54);
+    // Left ear to jaw
+    headPath.cubicTo(-32, -26, -26, -10, -14, -2);
+    // Chin
+    headPath.cubicTo(-8, 3, 8, 3, 14, -2);
+    // Right jaw to ear
+    headPath.cubicTo(26, -10, 32, -26, 32, -54);
+    // Top of head
+    headPath.cubicTo(32, -88, 18, -100, 0, -100);
+    headPath.cubicTo(-18, -100, -32, -88, -32, -54);
+    headPath.close();
+
+    final headPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0.0, -0.4),
+        radius: 0.85,
+        colors: [skinHighlight, skinBase, skinShadow],
+        stops: const [0.0, 0.65, 1.0],
+      ).createShader(const Rect.fromLTWH(-34, -102, 68, 108));
+    canvas.drawPath(headPath, headPaint);
+
+    // 3. Realistic Ears
     final earPaint = Paint()..color = skinShadow;
-    canvas.drawOval(const Rect.fromLTWH(-37, -56, 10, 16), earPaint);
-    canvas.drawOval(const Rect.fromLTWH(27, -56, 10, 16), earPaint);
+    canvas.drawOval(const Rect.fromLTWH(-36, -56, 8, 18), earPaint);
+    canvas.drawOval(const Rect.fromLTWH(28, -56, 8, 18), earPaint);
 
-    // Hair (Modern chic silhouette with glossy volume)
-    final hairColor =
-        isDark ? const Color(0xFF1E1E1E) : const Color(0xFF231F20);
-    final hairPaint = Paint()..color = hairColor;
+    // 4. Volumetric Modern Styled Hair
+    final hairDark =
+        isDark ? const Color(0xFF1A1A1A) : const Color(0xFF221F20);
+    final hairHighlight =
+        isDark ? const Color(0xFF333333) : const Color(0xFF3D3638);
 
     final hairPath = Path();
-    hairPath.moveTo(-35, -54);
-    hairPath.cubicTo(-38, -88, -20, -104, 0, -104);
-    hairPath.cubicTo(20, -104, 38, -88, 35, -54);
-    hairPath.cubicTo(32, -68, 22, -82, 4, -84);
-    hairPath.cubicTo(-14, -84, -28, -72, -35, -54);
+    hairPath.moveTo(-35, -50);
+    hairPath.cubicTo(-38, -88, -22, -104, 0, -104);
+    hairPath.cubicTo(22, -104, 38, -88, 35, -50);
+    hairPath.cubicTo(32, -68, 20, -82, 0, -82);
+    hairPath.cubicTo(-20, -82, -32, -68, -35, -50);
     hairPath.close();
+
+    final hairPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [hairHighlight, hairDark],
+      ).createShader(const Rect.fromLTWH(-38, -104, 76, 56));
     canvas.drawPath(hairPath, hairPaint);
 
-    // Side hair sweeps
-    canvas.drawOval(const Rect.fromLTWH(-36, -80, 16, 32), hairPaint);
-    canvas.drawOval(const Rect.fromLTWH(20, -80, 16, 32), hairPaint);
-
-    // Eyebrows (Dynamic lift based on pose.eyebrows)
+    // 5. Realistic Eyebrows
     final browPaint = Paint()
-      ..color = hairColor
-      ..strokeWidth = 2.2
+      ..color = hairDark
+      ..strokeWidth = 2.4
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
     final browLift = pose.eyebrows * 4.5;
     // Left eyebrow
-    canvas.drawLine(
-      Offset(-22, -54 - browLift),
-      Offset(-8, -56 - browLift),
-      browPaint,
-    );
+    final leftBrow = Path();
+    leftBrow.moveTo(-24, -54 - browLift);
+    leftBrow.quadraticBezierTo(-16, -58 - browLift, -8, -55 - browLift);
+    canvas.drawPath(leftBrow, browPaint);
+
     // Right eyebrow
-    canvas.drawLine(
-      Offset(8, -56 - browLift),
-      Offset(22, -54 - browLift),
-      browPaint,
-    );
+    final rightBrow = Path();
+    rightBrow.moveTo(8, -55 - browLift);
+    rightBrow.quadraticBezierTo(16, -58 - browLift, 24, -54 - browLift);
+    canvas.drawPath(rightBrow, browPaint);
 
-    // Eyes (Animated Blinking)
-    final eyePaint = Paint()
-      ..color = const Color(0xFF1A1A1A)
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2.0;
-
-    if (pose.eyeOpen < 0.2) {
-      // Closed / Blinking eye line
-      canvas.drawLine(const Offset(-20, -44), const Offset(-10, -44), eyePaint);
-      canvas.drawLine(const Offset(10, -44), const Offset(20, -44), eyePaint);
+    // 6. Realistic Expressive Eyes
+    if (pose.eyeOpen < 0.25) {
+      // Blinking / closed eyelid
+      final blinkPaint = Paint()
+        ..color = skinShadow
+        ..strokeWidth = 2.2
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+      canvas.drawLine(const Offset(-21, -44), const Offset(-9, -44), blinkPaint);
+      canvas.drawLine(const Offset(9, -44), const Offset(21, -44), blinkPaint);
     } else {
-      // Open Almond Eyes
-      final leftEyeRect = const Rect.fromLTWH(-22, -49, 12, 10);
-      final rightEyeRect = const Rect.fromLTWH(10, -49, 12, 10);
-
-      final scleraPaint = Paint()..color = Colors.white;
+      // Sclera (Eye whites with soft shading)
+      final scleraPaint = Paint()..color = const Color(0xFFF8F9FA);
+      final leftEyeRect = const Rect.fromLTWH(-22, -49, 13, 9);
+      final rightEyeRect = const Rect.fromLTWH(9, -49, 13, 9);
       canvas.drawOval(leftEyeRect, scleraPaint);
       canvas.drawOval(rightEyeRect, scleraPaint);
 
-      // Irises
-      final irisPaint = Paint()..color = const Color(0xFF2C3E35);
-      canvas.drawCircle(const Offset(-16, -44), 3.4, irisPaint);
-      canvas.drawCircle(const Offset(16, -44), 3.4, irisPaint);
+      // Realistic Irises (Deep Hazel/Forest Green)
+      final irisPaint = Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0xFF20362B), Color(0xFF13221B)],
+        ).createShader(const Rect.fromLTWH(-18, -47, 6, 6));
+      canvas.drawCircle(const Offset(-15.5, -44.5), 3.4, irisPaint);
+      canvas.drawCircle(const Offset(15.5, -44.5), 3.4, irisPaint);
 
-      // Eye reflections
+      // Dark Pupils
+      final pupilPaint = Paint()..color = Colors.black;
+      canvas.drawCircle(const Offset(-15.5, -44.5), 1.6, pupilPaint);
+      canvas.drawCircle(const Offset(15.5, -44.5), 1.6, pupilPaint);
+
+      // Specular Light Reflections
       final reflectPaint = Paint()..color = Colors.white;
-      canvas.drawCircle(const Offset(-17, -45), 1.2, reflectPaint);
-      canvas.drawCircle(const Offset(15, -45), 1.2, reflectPaint);
+      canvas.drawCircle(const Offset(-16.5, -45.5), 1.0, reflectPaint);
+      canvas.drawCircle(const Offset(14.5, -45.5), 1.0, reflectPaint);
+
+      // Upper Eyelash line
+      final lashPaint = Paint()
+        ..color = const Color(0xFF1E1E1E)
+        ..strokeWidth = 1.4
+        ..style = PaintingStyle.stroke;
+      canvas.drawArc(leftEyeRect, -math.pi, math.pi, false, lashPaint);
+      canvas.drawArc(rightEyeRect, -math.pi, math.pi, false, lashPaint);
     }
 
-    // Nose
-    final nosePaint = Paint()
-      ..color = skinShadow.withValues(alpha: 0.9)
-      ..strokeWidth = 1.6
+    // 7. Realistic 3D Nose Bridge & Tip
+    final noseShadow = Paint()
+      ..color = skinShadow.withValues(alpha: 0.8)
+      ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final nosePath = Path();
-    nosePath.moveTo(0, -46);
-    nosePath.lineTo(1, -34);
-    nosePath.lineTo(-3, -32);
-    canvas.drawPath(nosePath, nosePaint);
+    nosePath.moveTo(-1, -48);
+    nosePath.lineTo(-1, -33);
+    nosePath.lineTo(-4, -30);
+    nosePath.quadraticBezierTo(0, -28, 4, -30);
+    canvas.drawPath(nosePath, noseShadow);
 
-    // Mouth / Smile
-    final mouthPaint = Paint()
-      ..color = const Color(0xFFC76B66)
-      ..strokeWidth = 2.2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+    // 8. Realistic Lips
+    final lipColor = const Color(0xFFC76B66);
+    final lipShade = const Color(0xFFA8514C);
 
     final mouthCurve = pose.mouthSmile * 4.0;
-    final mouthPath = Path();
-    mouthPath.moveTo(-10, -20);
-    mouthPath.quadraticBezierTo(0, -20 + mouthCurve, 10, -20);
-    canvas.drawPath(mouthPath, mouthPaint);
+    final upperLip = Path();
+    upperLip.moveTo(-11, -19);
+    upperLip.quadraticBezierTo(-5, -21, 0, -19.5);
+    upperLip.quadraticBezierTo(5, -21, 11, -19);
+    upperLip.quadraticBezierTo(0, -17 + mouthCurve, -11, -19);
+
+    final lipPaint = Paint()..color = lipColor;
+    canvas.drawPath(upperLip, lipPaint);
+
+    final lipLinePaint = Paint()
+      ..color = lipShade
+      ..strokeWidth = 1.4
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(-10, -18.5),
+      Offset(10, -18.5 + mouthCurve * 0.4),
+      lipLinePaint,
+    );
 
     canvas.restore();
   }
 
-  // ── DRAW ARTICULATED ARM AND HAND ──────────────────────────
-  void _drawArmAndHand({
+  // ── DRAW VOLUMETRIC ARM AND 3D HAND ────────────────────────
+  void _drawVolumetricArmAndHand({
     required Canvas canvas,
     required Offset shoulder,
     required Offset handTarget,
@@ -270,29 +333,21 @@ class IslAvatarPainter extends CustomPainter {
     required AvatarHandShape handShape,
     required double wristRotation,
   }) {
-    final outfitColor =
+    final outfitBase =
         isDark ? const Color(0xFF283630) : const Color(0xFF384E49);
-    final skinTone = isDark ? const Color(0xFFE2C4A7) : const Color(0xFFF3D5B9);
-    final skinShadow = isDark ? const Color(0xFFCAAA8E) : const Color(0xFFDCBEA3);
+    final skinTone =
+        isDark ? const Color(0xFFE2C4A7) : const Color(0xFFF3D5B9);
+    final skinShadow =
+        isDark ? const Color(0xFFC7A588) : const Color(0xFFDBB89A);
 
-    // Inverse Kinematics (2-bone arm: Upper arm + Forearm)
-    const upperArmLength = 54.0;
-    const forearmLength = 50.0;
+    const upperArmLength = 56.0;
+    const forearmLength = 52.0;
 
     final dx = handTarget.dx - shoulder.dx;
     final dy = handTarget.dy - shoulder.dy;
     final targetDist = math.sqrt(dx * dx + dy * dy);
-
-    // Clamp distance to arm span
     final maxReach = upperArmLength + forearmLength - 4.0;
     final clampedDist = targetDist.clamp(20.0, maxReach);
-
-    // Law of cosines for elbow angle
-    final cosElbow = (upperArmLength * upperArmLength +
-            forearmLength * forearmLength -
-            clampedDist * clampedDist) /
-        (2 * upperArmLength * forearmLength);
-    final elbowAngle = math.acos(cosElbow.clamp(-1.0, 1.0));
 
     final baseAngle = math.atan2(dy, dx);
     final cosBase = (upperArmLength * upperArmLength +
@@ -307,30 +362,37 @@ class IslAvatarPainter extends CustomPainter {
       shoulder.dy + math.sin(shoulderAngle) * upperArmLength,
     );
 
-    // 1. Draw Upper Arm (Sleeve)
+    // 1. Upper Arm (Fabric sleeve with 3D gradient)
     final sleevePaint = Paint()
-      ..color = outfitColor
-      ..strokeWidth = 20.0
+      ..color = outfitBase
+      ..strokeWidth = 22.0
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(shoulder, elbow, sleevePaint);
 
-    // 2. Draw Forearm
-    final armPaint = Paint()
-      ..color = skinTone
-      ..strokeWidth = 14.0
+    // 2. Forearm (Volumetric skin tone tapering to wrist)
+    final forearmPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [skinTone, skinShadow],
+      ).createShader(Rect.fromPoints(elbow, handTarget))
+      ..strokeWidth = 15.0
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(elbow, handTarget, armPaint);
+    canvas.drawLine(elbow, handTarget, forearmPaint);
 
-    // 3. Draw Articulated Hand at handTarget
+    // 3. Realistic Hand Drop Shadow onto body (gives depth)
+    final handShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.14)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawCircle(handTarget + const Offset(4, 6), 14.0, handShadowPaint);
+
+    // 4. Draw Detailed 3D Anatomical Hand
     canvas.save();
     canvas.translate(handTarget.dx, handTarget.dy);
-    // Orient hand along forearm angle + wristRotation
     final handAngle =
         math.atan2(handTarget.dy - elbow.dy, handTarget.dx - elbow.dx) +
             wristRotation;
     canvas.rotate(handAngle);
 
-    _drawDetailedHand(
+    _drawAnatomicalHand(
       canvas: canvas,
       isRight: isRightArm,
       shape: handShape,
@@ -341,134 +403,179 @@ class IslAvatarPainter extends CustomPainter {
     canvas.restore();
   }
 
-  // ── DRAW DETAILED HAND WITH INDIVIDUAL FINGERS ─────────────
-  void _drawDetailedHand({
+  // ── DRAW ANATOMICAL HAND WITH 5 DISTINCT FINGERS & KNUCKLES ─
+  void _drawAnatomicalHand({
     required Canvas canvas,
     required bool isRight,
     required AvatarHandShape shape,
     required Color skinTone,
     required Color skinShadow,
   }) {
-    final handBasePaint = Paint()..color = skinTone;
+    final palmPaint = Paint()..color = skinTone;
     final shadowPaint = Paint()..color = skinShadow;
+    final knucklePaint = Paint()
+      ..color = skinShadow.withValues(alpha: 0.6)
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+
     final fingerPaint = Paint()
       ..color = skinTone
-      ..strokeWidth = 3.6
+      ..strokeWidth = 4.2
       ..strokeCap = StrokeCap.round;
 
-    // Palm base circle
-    canvas.drawCircle(Offset.zero, 8.5, handBasePaint);
-    canvas.drawCircle(const Offset(0, 2), 7.0, shadowPaint.withValues(alpha: 0.3));
+    final nailPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.5)
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
 
-    // Specific Hand Shapes
+    // Fleshy Palm (Contoured with thenar muscle at thumb base)
+    final palmPath = Path();
+    palmPath.addRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(-4, -8, 16, 17),
+        const Radius.circular(6),
+      ),
+    );
+    canvas.drawPath(palmPath, palmPaint);
+
+    // Palm crease lines for human realism
+    canvas.drawLine(const Offset(0, -2), const Offset(8, 3), knucklePaint);
+    canvas.drawLine(const Offset(2, -5), const Offset(9, -1), knucklePaint);
+
+    // Render Anatomical Fingers by Shape
     switch (shape) {
-      // ── Pointing Index Finger (ME, YOU, GO, D, Z, etc.) ────
+      // ── Pointing Index (ME, YOU, GO, D, Z, etc.) ────────────
       case AvatarHandShape.pointingIndex:
-        // Index finger extended straight out
-        canvas.drawLine(const Offset(4, -2), const Offset(24, -2), fingerPaint);
-        // Thumb tucked
-        canvas.drawCircle(const Offset(2, 5), 3.5, handBasePaint);
-        // Curled other fingers (fist bump)
-        canvas.drawOval(const Rect.fromLTWH(0, -6, 8, 12), shadowPaint);
+        // Index Finger: Full 3 segments
+        canvas.drawLine(const Offset(6, -4), const Offset(26, -4), fingerPaint);
+        // Fingernail
+        canvas.drawLine(const Offset(24, -4), const Offset(26, -4), nailPaint);
+        // Knuckle line
+        canvas.drawLine(const Offset(13, -6), const Offset(13, -2), knucklePaint);
+        canvas.drawLine(const Offset(19, -6), const Offset(19, -2), knucklePaint);
 
-      // ── Open Palm / Five Fingers (HELLO, SCHOOL, B, WHAT) ──
+        // Folded 3 fingers (Middle, Ring, Pinky curled tight into palm)
+        canvas.drawCircle(const Offset(8, 0), 3.8, shadowPaint);
+        canvas.drawCircle(const Offset(7, 4), 3.5, shadowPaint);
+        canvas.drawCircle(const Offset(6, 7), 3.2, shadowPaint);
+
+        // Thumb folded over
+        canvas.drawLine(const Offset(0, 4), const Offset(7, 1), fingerPaint);
+
+      // ── Open Palm / 5 Distinct Fingers (HELLO, SCHOOL, WHAT) ─
       case AvatarHandShape.openPalm:
-        // 4 fingers spread
-        canvas.drawLine(const Offset(4, -6), const Offset(20, -10), fingerPaint); // Index
-        canvas.drawLine(const Offset(6, -2), const Offset(23, -3), fingerPaint); // Middle
-        canvas.drawLine(const Offset(6, 2), const Offset(21, 4), fingerPaint); // Ring
-        canvas.drawLine(const Offset(4, 6), const Offset(17, 10), fingerPaint); // Pinky
-        // Thumb extended outward
-        final thumbY = isRight ? 8.0 : -8.0;
-        canvas.drawLine(Offset(0, thumbY), Offset(10, thumbY * 1.5), fingerPaint);
-
-      // ── Fist / S / A Handshape (SORRY, LOVE, S, A, T) ──────
-      case AvatarHandShape.fist:
-        // Tight closed fist
-        canvas.drawCircle(const Offset(4, 0), 9.0, handBasePaint);
-        canvas.drawOval(const Rect.fromLTWH(2, -5, 6, 10), shadowPaint);
-        // Thumb crossed over
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            const Rect.fromLTWH(0, -4, 9, 7),
-            const Radius.circular(3),
-          ),
-          handBasePaint,
+        // Index Finger
+        canvas.drawLine(const Offset(8, -6), const Offset(24, -11), fingerPaint);
+        canvas.drawLine(const Offset(22, -10), const Offset(24, -11), nailPaint);
+        // Middle Finger (Longest)
+        canvas.drawLine(const Offset(9, -2), const Offset(28, -3), fingerPaint);
+        canvas.drawLine(const Offset(26, -3), const Offset(28, -3), nailPaint);
+        // Ring Finger
+        canvas.drawLine(const Offset(9, 2), const Offset(25, 4), fingerPaint);
+        canvas.drawLine(const Offset(23, 4), const Offset(25, 4), nailPaint);
+        // Pinky Finger (Smallest)
+        canvas.drawLine(const Offset(7, 6), const Offset(20, 10), fingerPaint);
+        canvas.drawLine(const Offset(18, 9), const Offset(20, 10), nailPaint);
+        // Thumb extending out
+        final thumbDir = isRight ? 1.0 : -1.0;
+        canvas.drawLine(
+          const Offset(2, 4),
+          Offset(11, 4 + thumbDir * 10),
+          fingerPaint,
         );
 
-      // ── Flat Hand (THANK-YOU, PLEASE, BOOK, HELP) ──────────
+      // ── Tight Fist (SORRY, LOVE, A, S, T) ───────────────────
+      case AvatarHandShape.fist:
+        // Four curled knuckles
+        canvas.drawCircle(const Offset(8, -5), 4.2, shadowPaint);
+        canvas.drawCircle(const Offset(9, -1), 4.4, shadowPaint);
+        canvas.drawCircle(const Offset(8, 3), 4.2, shadowPaint);
+        canvas.drawCircle(const Offset(7, 7), 3.8, shadowPaint);
+        // Thumb locked firmly across curled fingers
+        final thumbPaint = Paint()
+          ..color = skinTone
+          ..strokeWidth = 4.8
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(const Offset(-1, 3), const Offset(10, -2), thumbPaint);
+
+      // ── Flat Hand (THANK-YOU, PLEASE, BOOK, HELP) ───────────
       case AvatarHandShape.flatHand:
-        // Fingers straight together like a paddle
-        canvas.drawLine(const Offset(4, -4), const Offset(22, -4), fingerPaint);
-        canvas.drawLine(const Offset(5, -1), const Offset(23, -1), fingerPaint);
-        canvas.drawLine(const Offset(5, 2), const Offset(22, 2), fingerPaint);
-        canvas.drawLine(const Offset(4, 5), const Offset(19, 5), fingerPaint);
-        // Thumb along index
-        canvas.drawLine(const Offset(0, -5), const Offset(12, -7), fingerPaint);
+        // All four fingers pressed firmly together
+        for (var i = 0; i < 4; i++) {
+          final y = -5.0 + (i * 3.4);
+          final len = (i == 1) ? 27.0 : (i == 0 || i == 2 ? 25.0 : 22.0);
+          canvas.drawLine(Offset(6, y), Offset(len, y), fingerPaint);
+          canvas.drawLine(Offset(len - 2, y), Offset(len, y), nailPaint);
+        }
+        // Thumb pressed alongside index
+        canvas.drawLine(const Offset(2, -6), const Offset(12, -7), fingerPaint);
 
-      // ── V Shape / Two Fingers (SEE, TWO, V, U, H) ──────────
+      // ── V Shape / Two Fingers (TWO, SEE, V, U) ──────────────
       case AvatarHandShape.vShape:
-        // Index and Middle in V
-        canvas.drawLine(const Offset(4, -4), const Offset(22, -9), fingerPaint);
-        canvas.drawLine(const Offset(4, 0), const Offset(22, 5), fingerPaint);
-        // Thumb holding ring & pinky down
-        canvas.drawCircle(const Offset(2, 4), 4.5, shadowPaint);
+        // Index Finger
+        canvas.drawLine(const Offset(6, -4), const Offset(26, -10), fingerPaint);
+        canvas.drawLine(const Offset(24, -9), const Offset(26, -10), nailPaint);
+        // Middle Finger
+        canvas.drawLine(const Offset(6, -1), const Offset(27, 4), fingerPaint);
+        canvas.drawLine(const Offset(25, 4), const Offset(27, 4), nailPaint);
+        // Ring & Pinky curled
+        canvas.drawCircle(const Offset(7, 4), 4.0, shadowPaint);
+        canvas.drawCircle(const Offset(6, 7), 3.5, shadowPaint);
+        // Thumb holding them
+        canvas.drawLine(const Offset(0, 3), const Offset(7, 2), fingerPaint);
 
-      // ── Pinch O / Small Grip (EAT, FOOD, O, F) ─────────────
+      // ── Pinch O (EAT, FOOD, O, F) ───────────────────────────
       case AvatarHandShape.pinchO:
-        // Fingertips meet thumb forming a teardrop/point
         final pinchPath = Path();
-        pinchPath.moveTo(0, -5);
-        pinchPath.lineTo(16, 0);
-        pinchPath.lineTo(0, 5);
+        pinchPath.moveTo(0, -6);
+        pinchPath.lineTo(20, -1);
+        pinchPath.lineTo(0, 6);
         pinchPath.close();
-        canvas.drawPath(pinchPath, handBasePaint);
-        canvas.drawCircle(const Offset(14, 0), 2.5, shadowPaint);
+        canvas.drawPath(pinchPath, palmPaint);
+        canvas.drawCircle(const Offset(18, -1), 3.2, shadowPaint);
+        // Curled back fingers
+        canvas.drawCircle(const Offset(5, 5), 3.5, shadowPaint);
 
-      // ── C Shape (DRINK, C, O) ──────────────────────────────
+      // ── C Shape (DRINK, C, O) ───────────────────────────────
       case AvatarHandShape.cShape:
-        final cPath = Path();
-        cPath.addArc(const Rect.fromLTWH(-2, -10, 20, 20), -math.pi / 2, math.pi);
         final cPaint = Paint()
           ..color = skinTone
-          ..strokeWidth = 4.0
+          ..strokeWidth = 5.0
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round;
-        canvas.drawPath(cPath, cPaint);
+        canvas.drawArc(
+          const Rect.fromLTWH(0, -12, 22, 22),
+          -math.pi / 2,
+          math.pi,
+          false,
+          cPaint,
+        );
 
-      // ── L Shape (L) ────────────────────────────────────────
+      // ── L Shape (L) ─────────────────────────────────────────
       case AvatarHandShape.lShape:
-        // Index pointing straight
-        canvas.drawLine(const Offset(2, 0), const Offset(22, 0), fingerPaint);
-        // Thumb pointing up 90 deg
-        canvas.drawLine(const Offset(0, 0), const Offset(0, -18), fingerPaint);
-        // Other 3 curled
-        canvas.drawCircle(const Offset(2, 4), 4.0, shadowPaint);
+        canvas.drawLine(const Offset(6, 0), const Offset(26, 0), fingerPaint);
+        canvas.drawLine(const Offset(1, -2), const Offset(1, -20), fingerPaint);
+        canvas.drawCircle(const Offset(5, 4), 4.5, shadowPaint);
 
-      // ── W Shape (WATER, W) ─────────────────────────────────
+      // ── W Shape (WATER, W) ──────────────────────────────────
       case AvatarHandShape.wShape:
-        // 3 fingers extended (Index, Middle, Ring)
-        canvas.drawLine(const Offset(4, -5), const Offset(21, -8), fingerPaint);
-        canvas.drawLine(const Offset(4, 0), const Offset(22, 0), fingerPaint);
-        canvas.drawLine(const Offset(4, 5), const Offset(21, 8), fingerPaint);
-        // Thumb on pinky
-        canvas.drawCircle(const Offset(0, 6), 4.0, shadowPaint);
+        canvas.drawLine(const Offset(6, -5), const Offset(24, -9), fingerPaint);
+        canvas.drawLine(const Offset(6, 0), const Offset(26, 0), fingerPaint);
+        canvas.drawLine(const Offset(6, 5), const Offset(24, 9), fingerPaint);
+        canvas.drawCircle(const Offset(2, 6), 4.2, shadowPaint);
 
-      // ── Y Shape (WHY, PHONE, Y) ────────────────────────────
+      // ── Y Shape (WHY, Y) ────────────────────────────────────
       case AvatarHandShape.yShape:
-        // Thumb and pinky extended out
-        canvas.drawLine(const Offset(0, -4), const Offset(10, -16), fingerPaint);
-        canvas.drawLine(const Offset(0, 4), const Offset(10, 16), fingerPaint);
-        // Middle 3 curled
-        canvas.drawCircle(const Offset(4, 0), 6.5, shadowPaint);
+        canvas.drawLine(const Offset(0, -4), const Offset(11, -18), fingerPaint);
+        canvas.drawLine(const Offset(0, 4), const Offset(11, 18), fingerPaint);
+        canvas.drawCircle(const Offset(6, 0), 7.0, shadowPaint);
 
-      // ── Relaxed / Default ──────────────────────────────────
+      // ── Relaxed ─────────────────────────────────────────────
       case AvatarHandShape.relaxed:
-      default:
-        canvas.drawCircle(const Offset(4, 0), 7.5, handBasePaint);
-        canvas.drawLine(const Offset(2, -3), const Offset(12, -4), fingerPaint);
-        canvas.drawLine(const Offset(2, 0), const Offset(13, 0), fingerPaint);
-        canvas.drawLine(const Offset(2, 3), const Offset(11, 3), fingerPaint);
+        canvas.drawCircle(const Offset(5, 0), 8.0, palmPaint);
+        canvas.drawLine(const Offset(3, -4), const Offset(14, -5), fingerPaint);
+        canvas.drawLine(const Offset(4, 0), const Offset(15, 0), fingerPaint);
+        canvas.drawLine(const Offset(3, 4), const Offset(13, 4), fingerPaint);
     }
   }
 

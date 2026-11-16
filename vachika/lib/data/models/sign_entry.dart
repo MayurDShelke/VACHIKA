@@ -17,12 +17,24 @@ class SignEntry {
   /// Material icon code point for placeholder display.
   final IconData icon;
 
+  /// Hand shape name (e.g., "Open 5-Hand", "Index D-Hand", "Fist S-Hand").
+  final String handShapeName;
+
+  /// Palm and hand orientation (e.g., "Palm outward towards viewer").
+  final String handOrientation;
+
+  /// Optional video demonstration URL or asset path for real human signer.
+  final String? videoUrl;
+
   const SignEntry({
     required this.gloss,
     required this.meaning,
     required this.category,
     required this.description,
     required this.icon,
+    this.handShapeName = 'Natural Handshape',
+    this.handOrientation = 'Facing forward',
+    this.videoUrl,
   });
 }
 

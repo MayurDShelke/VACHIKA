@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Vachika 3D ISL Signing Avatar</title>
+<style>
+  :root { 
+    --porcelain: #f4f5f2; 
+    --graphite: #202522; 
+    --forest: #344c43; 
+    --soft: #d6e8de; 
+    --stone: #8e938f; 
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { 
+    margin: 0; 
+    height: 100%; 
+    background: transparent; 
+    color: var(--graphite);
+    font-family: Inter, system-ui, -apple-system, sans-serif; 
+    font-size: 13px; 
+    overflow: hidden; 
+  }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #ui { 
+    position: absolute; 
+    top: 10px; 
+    left: 10px; 
+    width: 250px; 
+    max-height: calc(100% - 20px); 
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.96); 
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--soft); 
+    border-radius: 14px; 
+    padding: 14px; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 100;
+  }
+  #ui.hidden { display: none; }
+  #ui h2 { font-size: 13px; margin: 12px 0 6px; font-weight: 700; color: var(--forest); }
+  #ui h2:first-child { margin-top: 0; }
+  #ui button { 
+    font: inherit; 
+    background: var(--forest); 
+    color: #fff; 
+    border: 0; 
+    border-radius: 8px;
+    padding: 6px 12px; 
+    margin: 0 6px 6px 0; 
+    cursor: pointer; 
+    font-weight: 600;
+  }
+  #ui button.alt { background: var(--soft); color: var(--forest); }
+  #ui label { 
+    display: grid; 
+    grid-template-columns: 68px 1fr 34px; 
+    gap: 6px; 
+    align-items: center; 
+    margin: 3px 0; 
+    color: var(--stone); 
+    font-size: 11.5px; 
+  }
+  #ui output { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--graphite); }
+  #toggle { 
+    position: absolute; 
+    bottom: 12px; 
+    right: 12px; 
+    font: inherit; 
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.9); 
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--soft); 
+    border-radius: 20px; 
+    padding: 6px 12px; 
+    cursor: pointer; 
+    color: var(--forest);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    z-index: 90;
+  }
+  #indicator {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    padding: 5px 11px;
+    border-radius: 20px;
+    border: 1px solid var(--soft);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--forest);
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  #indicator-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 6px #10b981;
+  }
+</style>
+</head>
+<body>
+<div id="indicator"><div id="indicator-dot"></div><span id="current-sign-label">3D AI Signer</span></div>
+<button id="toggle" aria-label="Toggle Pose Studio">3D Studio</button>
+<div id="ui" class="hidden"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+/* ---------- scene ---------- */
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+// Transparent background to blend cleanly into Flutter container
+scene.background = null;
+
+const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 50);
+camera.position.set(0, 1.48, 2.3);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.34, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 1.0;
+controls.maxDistance = 4.0;
+controls.maxPolarAngle = Math.PI / 1.7;
+controls.update();
+
+// Lighting
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb9c2bb, 1.2));
+const sun = new THREE.DirectionalLight(0xfff7ed, 1.5);
+sun.position.set(1.5, 3.2, 2.5);
+scene.add(sun);
+
+const rimLight = new THREE.DirectionalLight(0xd6e8de, 0.8);
+rimLight.position.set(-1.5, 2.5, -2.0);
+scene.add(rimLight);
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ---------- rig ---------- */
+const rad = d => d * Math.PI / 180;
+const FINGERS = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+const J = {}; // joint name -> Object3D
+
+// High fidelity skin and clothing materials
+const skin  = new THREE.MeshStandardMaterial({ color: 0xd9a486, roughness: 0.55, metalness: 0.05 });
+const cloth = new THREE.MeshStandardMaterial({ color: 0x344c43, roughness: 0.82 }); // Vachika Forest Sage
+const dark  = new THREE.MeshStandardMaterial({ color: 0x1e1c1b, roughness: 0.85 });
+
+const procedural = new THREE.Group();
+scene.add(procedural);
+
+function seg(parent, name, len, r, mat, pos) {
+  const j = new THREE.Group();
+  j.position.set(...pos);
+  parent.add(j);
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, Math.max(len - 2 * r, 0.001), 6, 16), mat);
+  m.position.y = -len / 2;
+  j.add(m);
+  J[name] = j;
+  return j;
+}
+
+function mesh(parent, geo, mat, pos, scale = [1, 1, 1]) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(...pos); 
+  m.scale.set(...scale);
+  parent.add(m); 
+  return m;
+}
+
+function group(parent, name, pos) {
+  const g = new THREE.Group(); 
+  g.position.set(...pos); 
+  parent.add(g); 
+  J[name] = g; 
+  return g;
+}
+
+function buildProcedural() {
+  const hips = group(procedural, 'hips', [0, 0.95, 0]);
+  for (const s of [-1, 1]) {
+    mesh(hips, new THREE.CapsuleGeometry(0.075, 0.76, 4, 12), cloth, [s * 0.09, -0.47, 0]);
+    mesh(hips, new THREE.BoxGeometry(0.1, 0.06, 0.2), dark, [s * 0.09, -0.93, 0.04]);
+  }
+  const spine = group(hips, 'spine', [0, 0.05, 0]);
+  mesh(spine, new THREE.CapsuleGeometry(0.15, 0.4, 6, 16), cloth, [0, 0.27, 0], [1.4, 1, 0.8]);
+  const chest = group(spine, 'chest', [0, 0.5, 0]);
+  const neck  = group(chest, 'neck', [0, 0.14, 0]);
+  mesh(neck, new THREE.CapsuleGeometry(0.04, 0.06, 4, 8), skin, [0, 0.04, 0]);
+  const head = group(neck, 'head', [0, 0.08, 0]);
+  mesh(head, new THREE.SphereGeometry(0.1, 32, 24), skin, [0, 0.12, 0], [0.9, 1.2, 1.05]);
+  mesh(head, new THREE.SphereGeometry(0.104, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), dark, [0, 0.145, -0.008], [0.92, 1.1, 1.08]);
+  mesh(head, new THREE.ConeGeometry(0.014, 0.04, 8), skin, [0, 0.115, 0.108]).rotation.x = Math.PI / 2;
+  for (const s of [-1, 1]) mesh(head, new THREE.SphereGeometry(0.01, 12, 8), dark, [s * 0.036, 0.15, 0.092]);
+
+  for (const side of ['R', 'L']) {
+    const sx = side === 'R' ? -1 : 1;
+    const inner = -sx;
+    mesh(chest, new THREE.SphereGeometry(0.06, 16, 12), cloth, [sx * 0.2, 0.11, 0]);
+    const up = seg(chest, side + '.upperArm', 0.3, 0.05, cloth, [sx * 0.21, 0.11, 0]);
+    const fo = seg(up, side + '.foreArm', 0.27, 0.042, skin, [0, -0.3, 0]);
+    const ha = seg(fo, side + '.hand', 0.09, 0.035, skin, [0, -0.27, 0]);
+    ha.children[0].scale.set(1.25, 1, 0.45);
+
+    const lens = { index: [.042, .026, .02], middle: [.046, .028, .021], ring: [.042, .026, .02], pinky: [.033, .02, .017] };
+    ['index', 'middle', 'ring', 'pinky'].forEach((f, i) => {
+      let parent = ha, y = -0.09;
+      lens[f].forEach((len, k) => {
+        parent = seg(parent, `${side}.${f}${k + 1}`, len, 0.0085, skin, [k === 0 ? inner * (0.026 - i * 0.017) : 0, k === 0 ? y : -lens[f][k - 1], 0]);
+      });
+    });
+    const tl = [.035, .03, .025];
+    let tp = ha;
+    tl.forEach((len, k) => {
+      tp = seg(tp, `${side}.thumb${k + 1}`, len, 0.0095, skin, k === 0 ? [inner * 0.03, -0.03, 0.012] : [0, -tl[k - 1], 0]);
+    });
+    J[side + '.thumb1'].rotation.z = inner * rad(25);
+  }
+}
+buildProcedural();
+
+function captureRest() {
+  for (const k in J) J[k].userData.rest = J[k].quaternion.clone();
+  for (const s of ['R', 'L']) {
+    const n = x => J[s + '.' + x];
+    const pairs = [['upperArm', 'foreArm'], ['foreArm', 'hand'], ['hand', 'middle1']];
+    FINGERS.forEach(f => [1, 2].forEach(i => pairs.push([f + i, f + (i + 1)])));
+    pairs.forEach(([a, b]) => { if (n(a) && n(b)) n(a).userData.restDir = n(b).position.clone().normalize(); });
+    FINGERS.forEach(f => { const j = n(f + '3'); if (j) j.userData.restDir = j.position.clone().normalize(); });
+  }
+}
+captureRest();
+
+/* ---------- pose model ---------- */
+const REST = {
+  R: { arm: [0, 0, -4], fore: [-8, 0, 0], hand: [0, 80, 0], curl: [.2, .2, .2, .2, .2] },
+  L: { arm: [0, 0, -4], fore: [-8, 0, 0], hand: [0, 80, 0], curl: [.2, .2, .2, .2, .2] },
+  head: [0, 0, 0], spine: [0, 0, 0]
+};
+
+const clone = o => JSON.parse(JSON.stringify(o));
+function merge(base, over) {
+  const o = clone(base);
+  (function walk(t, s) { 
+    for (const k in s) {
+      if (s[k] && !Array.isArray(s[k]) && typeof s[k] === 'object') walk(t[k], s[k]);
+      else t[k] = s[k];
+    }
+  })(o, over || {});
+  return o;
+}
+
+function lerpPose(a, b, t) {
+  if (Array.isArray(a)) return a.map((v, i) => v + (b[i] - v) * t);
+  const o = {}; for (const k in a) o[k] = lerpPose(a[k], b[k], t); return o;
+}
+
+const FA = [[-25, 0, 45], [-30, 0, 40], [-20, 0, 40]];
+const FB = [-80, -95, -65];
+const _e = new THREE.Euler(), _q = new THREE.Quaternion();
+
+function setJoint(name, e, m = [1, 1, 1]) {
+  const j = J[name]; if (!j) return;
+  _e.set(rad(e[0] * m[0]), rad(e[1] * m[1]), rad(e[2] * m[2]));
+  j.quaternion.copy(j.userData.rest).multiply(_q.setFromEuler(_e));
+}
+
+function applyPose(p) {
+  for (const side of ['R', 'L']) {
+    const m = side === 'L' ? [1, -1, -1] : [1, 1, 1], s = p[side];
+    setJoint(side + '.upperArm', s.arm, m);
+    setJoint(side + '.foreArm', s.fore, m);
+    setJoint(side + '.hand', s.hand, m);
+    FINGERS.forEach((f, i) => [0, 1, 2].forEach(k => {
+      const c = s.curl[i];
+      setJoint(`${side}.${f}${k + 1}`, f === 'thumb' ? FA[k].map(v => v * c) : [FB[k] * c, 0, 0], m);
+    }));
+  }
+  setJoint('head', p.head); 
+  setJoint('spine', p.spine);
+}
+
+/* ---------- EXTENSIVE ISL SIGNS REPERTOIRE ---------- */
+const wave = y => ({ R: { arm: [-25, 0, -50], fore: [-105, 0, 0], hand: [0, 70, y], curl: [0, 0, 0, 0, 0] } });
+
+const SIGNS = {
+  // ── HELLO ──────────────────────────────────────────────────
+  hello: { keys: [
+    [0, {}], 
+    [.4, wave(0)], 
+    [.7, wave(24)], 
+    [1.0, wave(-24)], 
+    [1.3, wave(24)], 
+    [1.6, wave(-24)], 
+    [2.0, {}]
+  ] },
+
+  // ── THANK YOU ──────────────────────────────────────────────
+  thank_you: { keys: [
+    [0, {}],
+    [.5, { R: { arm: [-55, 0, -8], fore: [-125, 0, 0], hand: [0, 60, 0], curl: [0, 0, 0, 0, 0] } }],
+    [1.1, { R: { arm: [-35, 0, -8], fore: [-70, 0, 0], hand: [0, 60, 0], curl: [0, 0, 0, 0, 0] }, head: [8, 0, 0] }],
+    [1.8, {}]
+  ] },
+
+  // ── YES ────────────────────────────────────────────────────
+  yes: { keys: [
+    [0, {}],
+    [.4, { R: { arm: [-30, 0, -8], fore: [-95, 0, 0], hand: [0, 80, 0], curl: [1, 1, 1, 1, 1] } }],
+    [.7, { R: { arm: [-30, 0, -8], fore: [-95, 0, 0], hand: [-25, 80, 0], curl: [1, 1, 1, 1, 1] }, head: [10, 0, 0] }],
+    [1.0, { R: { arm: [-30, 0, -8], fore: [-95, 0, 0], hand: [20, 80, 0], curl: [1, 1, 1, 1, 1] }, head: [-4, 0, 0] }],
+    [1.3, { R: { arm: [-30, 0, -8], fore: [-95, 0, 0], hand: [-25, 80, 0], curl: [1, 1, 1, 1, 1] }, head: [10, 0, 0] }],
+    [1.8, {}]
+  ] },
+
+  // ── NO ─────────────────────────────────────────────────────
+  no: { keys: [
+    [0, {}],
+    [.4, { R: { arm: [-30, 0, 0], fore: [-90, 0, 0], hand: [0, 75, 0], curl: [0.2, 0, 0, 1, 1] } }],
+    [.8, { R: { arm: [-30, 0, 0], fore: [-90, 0, 0], hand: [-15, 75, 0], curl: [0.8, 0.8, 0.8, 1, 1] } }],
+    [1.2, { R: { arm: [-30, 0, 0], fore: [-90, 0, 0], hand: [0, 75, 0], curl: [0.2, 0, 0, 1, 1] } }],
+    [1.5, { R: { arm: [-30, 0, 0], fore: [-90, 0, 0], hand: [-15, 75, 0], curl: [0.8, 0.8, 0.8, 1, 1] } }],
+    [1.9, {}]
+  ] },
+
+  // ── ME / I (Point index to chest) ──────────────────────────
+  me: { keys: [
+    [0, {}],
+    [.5, { R: { arm: [-20, 0, -12], fore: [-115, 0, 0], hand: [-15, 60, 0], curl: [1, 0, 1, 1, 1] }, head: [4, 0, 0] }],
+    [1.3, { R: { arm: [-20, 0, -12], fore: [-115, 0, 0], hand: [-15, 60, 0], curl: [1, 0, 1, 1, 1] }, head: [4, 0, 0] }],
+    [1.8, {}]
+  ] },
+
+  // ── YOU (Point index forward) ──────────────────────────────
+  you: { keys: [
+    [0, {}],
+    [.5, { R: { arm: [-38, 0, 2], fore: [-50, 0, 0], hand: [0, 75, 0], curl: [1, 0, 1, 1, 1] }, head: [-2, 0, 0] }],
+    [1.2, { R: { arm: [-42, 0, 2], fore: [-45, 0, 0], hand: [0, 75, 0], curl: [1, 0, 1, 1, 1] } }],
+    [1.8, {}]
+  ] },
+
+  // ── SCHOOL (Both hands clap rhythmically) ──────────────────
+  school: { keys: [
+    [0, {}],
+    [.4, { 
+      R: { arm: [-32, 0, -22], fore: [-90, 0, 0], hand: [0, 20, 0], curl: [0, 0, 0, 0, 0] },
+      L: { arm: [-32, 0, -22], fore: [-90, 0, 0], hand: [0, 20, 0], curl: [0, 0, 0, 0, 0] }
+    }],
+    [.7, { 
+      R: { arm: [-30, 0, -8], fore: [-90, 0, 0], hand: [0, 0, 0], curl: [0, 0, 0, 0, 0] },
+      L: { arm: [-30, 0, -8], fore: [-90, 0, 0], hand: [0, 0, 0], curl: [0, 0, 0, 0, 0] }
+    }],
+    [1.0, { 
+      R: { arm: [-32, 0, -22], fore: [-90, 0, 0], hand: [0, 20, 0], curl: [0, 0, 0, 0, 0] },
+      L: { arm: [-32, 0, -22], fore: [-90, 0, 0], hand: [0, 20, 0], curl: [0, 0, 0, 0, 0] }
+    }],
+    [1.3, { 
+      R: { arm: [-30, 0, -8], fore: [-90, 0, 0], hand: [0, 0, 0], curl: [0, 0, 0, 0, 0] },
+      L: { arm: [-30, 0, -8], fore: [-90, 0, 0], hand: [0, 0, 0], curl: [0, 0, 0, 0, 0] }
+    }],
+    [1.9, {}]
+  ] },
+
+  // ── GO (Both index fingers push forward) ───────────────────
+  go: { keys: [
+    [0, {}],
+    [.4, { 
+      R: { arm: [-20, 0, 0], fore: [-90, 0, 0], hand: [0, 70, 0], curl: [1, 0, 1, 1, 1] },
+      L: { arm: [-20, 0, 0], fore: [-90, 0, 0], hand: [0, 70, 0], curl: [1, 0, 1, 1, 1] }
+    }],
+    [1.0, { 
+      R: { arm: [-45, 0, 5], fore: [-35, 0, 0], hand: [0, 75, 0], curl: [1, 0, 1, 1, 1] },
+      L: { arm: [-45, 0, 5], fore: [-35, 0, 0], hand: [0, 75, 0], curl: [1, 0, 1, 1, 1] }
+    }],
+    [1.8, {}]
+  ] },
+
+  // ── COME (Beckon toward body) ──────────────────────────────
+  come: { keys: [
+    [0, {}],
+    [.4, { 
+      R: { arm: [-40, 0, 0], fore: [-45, 0, 0], hand: [0, 80, 0], curl: [1, 0, 1, 1, 1] },
+      L: { arm: [-40, 0, 0], fore: [-45, 0, 0], hand: [0, 80, 0], curl: [1, 0, 1, 1, 1] }
+    }],
+    [1.1, { 
+      R: { arm: [-25, 0, 0], fore: [-105, 0, 0], hand: [30, 80, 0], curl: [1, 0, 1, 1, 1] },
+      L: { arm: [-25, 0, 0], fore: [-105, 0, 0], hand: [30, 80, 0], curl: [1, 0, 1, 1, 1] }
+    }],
+    [1.8, {}]
+  ] },
+
+  // ── EAT / FOOD (Fingertips to mouth) ───────────────────────
+  eat: { keys: [
+    [0, {}],
+    [.4, { R: { arm: [-52, 0, -6], fore: [-130, 0, 0], hand: [0, 50, 0], curl: [.7, .7, .7, .7, .7] } }],
+    [.7, { R: { arm: [-45, 0, -6], fore: [-110, 0, 0], hand: [0, 50, 0], curl: [.7, .7, .7, .7, .7] } }],
+    [1.0, { R: { arm: [-52, 0, -6], fore: [-130, 0, 0], hand: [0, 50, 0], curl: [.7, .7, .7, .7, .7] } }],
+    [1.8, {}]
+  ] },
+
+  // ── DRINK (C-hand cup tilt to mouth) ───────────────────────
+  drink: { keys: [
+    [0, {}],
+    [.5, { R: { arm: [-50, 0, -4], fore: [-125, 0, 0], hand: [-10, 45, 0], curl: [.35, .35, .35, .35, .35] } }],
+    [1.1, { R: { arm: [-52, 0, -4], fore: [-130, 0, 0], hand: [-40, 45, 0], curl: [.35, .35, .35, .35, .35] }, head: [12, 0, 0] }],
+    [1.8, {}]
+  ] },
+
+  // ── PLEASE (Open flat hand circling chest) ─────────────────
+  please: { keys: [
+    [0, {}],
+    [.4, { R: { arm: [-20, 0, -16], fore: [-110, 0, 0], hand: [0, 10, 0], curl: [0, 0, 0, 0, 0] } }],
+    [.8, { R: { arm: [-22, 0, -14], fore: [-105, 0, 0], hand: [10, 15, 0], curl: [0, 0, 0, 0, 0] } }],
+    [1.2, { R: { arm: [-18, 0, -18], fore: [-115, 0, 0], hand: [-10, 10, 0], curl: [0, 0, 0, 0, 0] } }],
+    [1.8, {}]
+  ] },
+
+  // ── SORRY (Fist circling chest) ────────────────────────────
+  sorry: { keys: [
+    [0, {}],
+    [.4, { R: { arm: [-20, 0, -16], fore: [-110, 0, 0], hand: [0, 10, 0], curl: [1, 1, 1, 1, 1] }, head: [8, 0, 0] }],
+    [.8, { R: { arm: [-22, 0, -14], fore: [-105, 0, 0], hand: [10, 15, 0], curl: [1, 1, 1, 1, 1] }, head: [8, 0, 0] }],
+    [1.2, { R: { arm: [-18, 0, -18], fore: [-115, 0, 0], hand: [-10, 10, 0], curl: [1, 1, 1, 1, 1] }, head: [8, 0, 0] }],
+    [1.8, {}]
+  ] },
+
+  // ── WHAT (Both palms up side-to-side) ──────────────────────
+  what: { keys: [
+    [0, {}],
+    [.4, { 
+      R: { arm: [-20, 0, 16], fore: [-80, 0, 0], hand: [0, 90, 0], curl: [0, 0, 0, 0, 0] },
+      L: { arm: [-20, 0, 16], fore: [-80, 0, 0], hand: [0, 90, 0], curl: [0, 0, 0, 0, 0] },
+      head: [0, 0, 6]
+    }],
+    [.8, { 
+      R: { arm: [-20, 0, 24], fore: [-80, 0, 0], hand: [0, 90, 0], curl: [0, 0, 0, 0, 0] },
+      L: { arm: [-20, 0, 24], fore: [-80, 0, 0], hand: [0, 90, 0], curl: [0, 0, 0, 0, 0] },
+      head: [0, 0, -6]
+    }],
+    [1.2, { 
+      R: { arm: [-20, 0, 16], fore: [-80, 0, 0], hand: [0, 90, 0], curl: [0, 0, 0, 0, 0] },
+      L: { arm: [-20, 0, 16], fore: [-80, 0, 0], hand: [0, 90, 0], curl: [0, 0, 0, 0, 0] },
+      head: [0, 0, 6]
+    }],
+    [1.8, {}]
+  ] },
+
+  // ── LOVE (Cross fists over chest) ──────────────────────────
+  love: { keys: [
+    [0, {}],
+    [.6, { 
+      R: { arm: [-25, 0, -32], fore: [-112, 0, 0], hand: [0, 0, 0], curl: [1, 1, 1, 1, 1] },
+      L: { arm: [-25, 0, -32], fore: [-112, 0, 0], hand: [0, 0, 0], curl: [1, 1, 1, 1, 1] },
+      head: [6, 0, 0]
+    }],
+    [1.4, { 
+      R: { arm: [-25, 0, -32], fore: [-112, 0, 0], hand: [0, 0, 0], curl: [1, 1, 1, 1, 1] },
+      L: { arm: [-25, 0, -32], fore: [-112, 0, 0], hand: [0, 0, 0], curl: [1, 1, 1, 1, 1] }
+    }],
+    [1.9, {}]
+  ] },
+
+  // ── HELP (Fist on flat palm) ───────────────────────────────
+  help: { keys: [
+    [0, {}],
+    [.4, { 
+      R: { arm: [-30, 0, -10], fore: [-90, 0, 0], hand: [0, 45, 0], curl: [1, 1, 1, 1, 1] },
+      L: { arm: [-28, 0, -10], fore: [-80, 0, 0], hand: [0, 90, 0], curl: [0, 0, 0, 0, 0] }
+    }],
+    [1.0, { 
+      R: { arm: [-45, 0, -10], fore: [-80, 0, 0], hand: [0, 45, 0], curl: [1, 1, 1, 1, 1] },
+      L: { arm: [-42, 0, -10], fore: [-70, 0, 0], hand: [0, 90, 0], curl: [0, 0, 0, 0, 0] }
+    }],
+    [1.8, {}]
+  ] }
+};
+
+// Prepare all defined signs
+for (const s of Object.values(SIGNS)) {
+  if (Array.isArray(s.keys)) {
+    s.keys = s.keys.map(k => Array.isArray(k) ? ({ t: k[0], pose: merge(REST, k[1]) }) : k);
+    s.dur = s.keys[s.keys.length - 1].t;
+  }
+}
+
+// Aliases for ease of matching from Vachika's ISL Glosser (assigned AFTER mapping)
+SIGNS['hi'] = SIGNS['hello'];
+SIGNS['thanks'] = SIGNS['thank_you'];
+SIGNS['food'] = SIGNS['eat'];
+SIGNS['where'] = SIGNS['what'];
+SIGNS['i'] = SIGNS['me'];
+
+function sampleSign(sign, t) {
+  const k = sign.keys;
+  let i = 0; while (i < k.length - 2 && t > k[i + 1].t) i++;
+  const a = k[i], b = k[i + 1];
+  let u = Math.min(Math.max((t - a.t) / (b.t - a.t), 0), 1);
+  u = u * u * (3 - 2 * u);
+  return lerpPose(a.pose, b.pose, u);
+}
+
+/* ---------- realistic GLB loader ---------- */
+let glbMode = false;
+let glbModel = null;
+const norm = n => n.toLowerCase().replace(/^mixamorig/, '').replace(/[^a-z0-9]/g, '');
+
+async function loadGLB(url) {
+  const gltf = await new GLTFLoader().loadAsync(url);
+  const root = gltf.scene;
+  const byName = {};
+  root.traverse(o => { if (o.name) byName[norm(o.name)] = o; });
+  const pick = c => { for (const n of c) if (byName[n]) return byName[n]; return null; };
+  for (const k in J) delete J[k];
+  const tri = ['proximal', 'intermediate', 'distal'], thumbTri = ['metacarpal', 'proximal', 'distal'];
+  const mh = { thumb: 1, index: 2, middle: 3, ring: 4, pinky: 5 };
+  for (const [s, S, l] of [['R', 'right', 'r'], ['L', 'left', 'l']]) {
+    J[s + '.upperArm'] = pick([`${S}arm`, `${S}upperarm`, `upperarm01${l}`, `upperarm${l}`]);
+    J[s + '.foreArm']  = pick([`${S}forearm`, `${S}lowerarm`, `lowerarm01${l}`, `lowerarm${l}`]);
+    J[s + '.hand']     = pick([`${S}hand`, `wrist${l}`, `hand${l}`]);
+    FINGERS.forEach(f => [1, 2, 3].forEach(i => {
+      J[`${s}.${f}${i}`] = pick([`${S}hand${f}${i}`, `${S}${f}${i}`, `${S}${f}${(f === 'thumb' ? thumbTri : tri)[i - 1]}`, `finger${mh[f]}${i}${l}`]);
+    }));
+  }
+  const missing = Object.entries(J).filter(([, v]) => !v).map(([k]) => k);
+  if (missing.length) { console.warn('Bones not found:', missing); }
+  root.updateMatrixWorld(true);
+  let box = new THREE.Box3().setFromObject(root);
+  root.scale.multiplyScalar(1.75 / (box.max.y - box.min.y));
+  root.updateMatrixWorld(true);
+  box = new THREE.Box3().setFromObject(root);
+  root.position.y -= box.min.y;
+  root.position.x -= (box.min.x + box.max.x) / 2;
+  root.updateMatrixWorld(true);
+  if (glbModel) scene.remove(glbModel);
+  glbModel = root; 
+  scene.add(root);
+  procedural.visible = false;
+  for (const k in J) if (J[k]) J[k].userData.rest = J[k].quaternion.clone();
+  glbMode = true; 
+  current = null;
+  return missing;
+}
+
+function idleGLB() {
+  for (const [s, sx] of [['R', -1], ['L', 1]]) {
+    aim(J[s + '.upperArm'], new THREE.Vector3(sx * 0.12, -1, 0));
+    aim(J[s + '.foreArm'],  new THREE.Vector3(sx * 0.05, -1, 0.1));
+    aim(J[s + '.hand'],     new THREE.Vector3(0, -1, 0.08));
+    FINGERS.forEach(f => [1, 2, 3].forEach(i =>
+      aim(J[`${s}.${f}${i}`], f === 'thumb' ? new THREE.Vector3(-sx * 0.3, -1, 0.25) : new THREE.Vector3(0, -1, 0.1 + 0.18 * i))));
+  }
+}
+
+/* ---------- player & synchronization ---------- */
+const clock = new THREE.Clock();
+let current = null, manual = false;
+let playbackSpeed = 1.0;
+let isPaused = false;
+let pauseOffset = 0;
+const manualPose = clone(REST);
+
+function start(job) { 
+  return new Promise(res => { 
+    if (current && current.res) current.res(); 
+    current = { ...job, t0: clock.getElapsedTime(), res }; 
+  }); 
+}
+
+function notifyFlutter(event, data = {}) {
+  const payload = JSON.stringify({ event, ...data });
+  if (window.FlutterSignChannel && window.FlutterSignChannel.postMessage) {
+    window.FlutterSignChannel.postMessage(payload);
+  }
+}
+
+function tick() {
+  requestAnimationFrame(tick);
+  controls.update();
+
+  const now = clock.getElapsedTime();
+  if (current && !isPaused) {
+    const rawT = (now - current.t0) * playbackSpeed;
+    if (current.kind === 'sign') {
+      const dur = current.sign.dur;
+      if (!glbMode) applyPose(sampleSign(current.sign, Math.min(rawT, dur)));
+      if (rawT >= dur) { 
+        const r = current.res; 
+        const signName = current.signName;
+        current = null; 
+        notifyFlutter('sign_finished', { sign: signName });
+        if (r) r(); 
+      }
+    }
+  } else if (glbMode) {
+    idleGLB();
+  } else if (manual) {
+    applyPose(merge(REST, { R: manualPose.R }));
+  } else {
+    // Subtle natural breathing
+    const breath = Math.sin(now * 1.8) * 1.5;
+    const idleP = clone(REST);
+    idleP.spine = [breath, 0, 0];
+    applyPose(idleP);
+  }
+
+  renderer.render(scene, camera);
+}
+
+/* ---------- public API for Flutter & User ---------- */
+window.avatar = {
+  signs: SIGNS,
+  playSign: (name, speed) => {
+    if (speed) playbackSpeed = speed;
+    const clean = (name || '').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    const label = document.getElementById('current-sign-label');
+    if (label) label.textContent = (name || '3D AI Signer').toUpperCase();
+
+    // Check direct sign
+    if (SIGNS[clean]) {
+      return start({ kind: 'sign', sign: SIGNS[clean], signName: clean });
+    }
+    // Generic fallback gesture if specific keyframe not recorded
+    const genericSign = {
+      keys: [
+        { t: 0, pose: REST },
+        { t: 0.5, pose: merge(REST, { R: { arm: [-30, 0, 0], fore: [-80, 0, 0], hand: [0, 60, 0], curl: [0, 0, 0, 0, 0] } }) },
+        { t: 1.2, pose: merge(REST, { R: { arm: [-30, 0, 0], fore: [-80, 0, 0], hand: [0, 60, 0], curl: [0, 0, 0, 0, 0] } }) },
+        { t: 1.8, pose: REST }
+      ],
+      dur: 1.8
+    };
+    return start({ kind: 'sign', sign: genericSign, signName: clean });
+  },
+  pause: () => { isPaused = true; },
+  resume: () => { isPaused = false; },
+  setSpeed: s => { playbackSpeed = s; },
+  resetCamera: () => {
+    camera.position.set(0, 1.48, 2.3);
+    controls.target.set(0, 1.34, 0);
+    controls.update();
+  },
+  say: async glosses => { 
+    for (const g of glosses) {
+      await window.avatar.playSign(g);
+    }
+  },
+  loadGLB
+};
+
+/* ---------- authoring panel ---------- */
+const ui = document.getElementById('ui');
+ui.innerHTML = '<h2>Realistic 3D Character</h2><p style="margin:0 0 8px;color:var(--stone);font-size:11.5px">Drop a rigged .glb / .gltf file here or select one.</p>';
+const pickIn = document.createElement('input'); 
+pickIn.type = 'file'; 
+pickIn.accept = '.glb,.gltf'; 
+pickIn.style.cssText = 'width:100%;margin-bottom:8px;font-size:11px';
+
+const loadFile = f => f && window.avatar.loadGLB(URL.createObjectURL(f)).then(m => { 
+  if (m.length) console.warn('Bones not recognized:', m); 
+}).catch(e => alert('Could not load 3D model: ' + e.message));
+
+pickIn.onchange = () => loadFile(pickIn.files[0]); 
+ui.append(pickIn);
+
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => { e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
+
+const hs = document.createElement('h2'); 
+hs.textContent = 'ISL Vocabulary Signs'; 
+ui.append(hs);
+
+Object.keys(SIGNS).forEach(n => {
+  const b = document.createElement('button'); 
+  b.textContent = n.replace('_', ' ').toUpperCase();
+  b.onclick = () => { manual = false; window.avatar.playSign(n); }; 
+  ui.append(b);
+});
+
+const h = document.createElement('h2'); 
+h.textContent = 'Joint Posing Studio'; 
+ui.append(h);
+
+const sliders = [];
+function slider(label, arr, i, min, max) {
+  const l = document.createElement('label');
+  l.innerHTML = `${label}<input type="range" min="${min}" max="${max}" step="${max <= 1 ? .05 : 1}" value="${arr[i]}"><output>${arr[i]}</output>`;
+  const inp = l.querySelector('input'), out = l.querySelector('output');
+  inp.oninput = () => { arr[i] = +inp.value; out.textContent = inp.value; manual = true; };
+  sliders.push(() => { inp.value = arr[i]; out.textContent = arr[i]; });
+  ui.append(l);
+}
+
+[['arm', 'upper arm'], ['fore', 'forearm'], ['hand', 'wrist']].forEach(([k, name]) =>
+  ['x', 'y', 'z'].forEach((ax, i) => slider(`${name} ${ax}`, manualPose.R[k], i, -180, 180)));
+
+FINGERS.forEach((f, i) => slider(f, manualPose.R.curl, i, 0, 1));
+
+const copy = document.createElement('button'); 
+copy.textContent = 'Copy Pose JSON';
+copy.onclick = () => navigator.clipboard?.writeText(JSON.stringify({ R: manualPose.R })).catch(() => {});
+
+const reset = document.createElement('button'); 
+reset.textContent = 'Reset'; 
+reset.className = 'alt';
+reset.onclick = () => { 
+  manual = false; 
+  ['arm','fore','hand','curl'].forEach(k => REST.R[k].forEach((v, i) => manualPose.R[k][i] = v)); 
+  sliders.forEach(f => f()); 
+};
+
+ui.append(document.createElement('br'), copy, reset);
+document.getElementById('toggle').onclick = () => ui.classList.toggle('hidden');
+
+tick();
+</script>
+</body>
+</html>

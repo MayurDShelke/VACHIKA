@@ -4,13 +4,13 @@ import 'package:vachika/core/widgets/split_nav_bar.dart';
 
 void main() {
   const tabs = [
-    SplitNavItem(icon: Icons.home_rounded, label: 'Home'),
-    SplitNavItem(icon: Icons.menu_book_rounded, label: 'Dictionary'),
-    SplitNavItem(icon: Icons.history_rounded, label: 'History'),
-    SplitNavItem(icon: Icons.settings_rounded, label: 'Settings'),
+    SplitNavItem(icon: Icons.forum_rounded, label: 'Conversation'),
+    SplitNavItem(icon: Icons.back_hand_rounded, label: 'Sign → Speech'),
+    SplitNavItem(icon: Icons.translate_rounded, label: 'Text → Sign'),
+    SplitNavItem(icon: Icons.person_rounded, label: 'Profile'),
   ];
 
-  testWidgets('SplitNavBar displays circle + rectangle when currentIndex == 0',
+  testWidgets('SplitNavBar displays Conversation circle + [Sign, Text, Profile] pill dock when currentIndex == 0',
       (WidgetTester tester) async {
     int? tappedIndex;
 
@@ -26,18 +26,18 @@ void main() {
       ),
     );
 
-    // Verify all 4 tab labels are present in the widget tree
-    expect(find.text('Dictionary'), findsOneWidget);
-    expect(find.text('History'), findsOneWidget);
-    expect(find.text('Settings'), findsOneWidget);
+    // Verify dock labels
+    expect(find.text('Sign → Speech'), findsOneWidget);
+    expect(find.text('Text → Sign'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
 
-    // Tap on Dictionary (index 1)
-    await tester.tap(find.text('Dictionary'));
+    // Tap on Sign → Speech (index 1)
+    await tester.tap(find.text('Sign → Speech'));
     await tester.pumpAndSettle();
     expect(tappedIndex, equals(1));
   });
 
-  testWidgets('SplitNavBar displays unified rectangle dock when currentIndex != 0',
+  testWidgets('SplitNavBar displays Conversation circle + Sign circle + [Text, Profile] pill dock when currentIndex == 1',
       (WidgetTester tester) async {
     int? tappedIndex;
 
@@ -53,15 +53,64 @@ void main() {
       ),
     );
 
-    // In unified dock, all 4 labels are visible
-    expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Dictionary'), findsOneWidget);
-    expect(find.text('History'), findsOneWidget);
-    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Text → Sign'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
 
-    // Tap Home (index 0)
-    await tester.tap(find.text('Home'));
+    // Tap Text → Sign (index 2)
+    await tester.tap(find.text('Text → Sign'));
+    await tester.pumpAndSettle();
+    expect(tappedIndex, equals(2));
+  });
+
+  testWidgets('SplitNavBar displays [Conversation, Sign] pill dock + Text circle + [Profile] when currentIndex == 2',
+      (WidgetTester tester) async {
+    int? tappedIndex;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          bottomNavigationBar: SplitNavBar(
+            currentIndex: 2,
+            onTap: (i) => tappedIndex = i,
+            items: tabs,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Conversation'), findsOneWidget);
+    expect(find.text('Sign → Speech'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
+
+    // Tap Conversation (index 0)
+    await tester.tap(find.text('Conversation'));
     await tester.pumpAndSettle();
     expect(tappedIndex, equals(0));
+  });
+
+  testWidgets('SplitNavBar displays [Conversation, Sign, Text] pill dock + Profile circle when currentIndex == 3',
+      (WidgetTester tester) async {
+    int? tappedIndex;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          bottomNavigationBar: SplitNavBar(
+            currentIndex: 3,
+            onTap: (i) => tappedIndex = i,
+            items: tabs,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Conversation'), findsOneWidget);
+    expect(find.text('Sign → Speech'), findsOneWidget);
+    expect(find.text('Text → Sign'), findsOneWidget);
+
+    // Tap Sign → Speech (index 1)
+    await tester.tap(find.text('Sign → Speech'));
+    await tester.pumpAndSettle();
+    expect(tappedIndex, equals(1));
   });
 }

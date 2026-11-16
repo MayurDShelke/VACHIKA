@@ -203,6 +203,43 @@ class AppTheme {
   }
 
   // ──────────────────────────────────────────────────────────
+  //  Dark Theme
+  // ──────────────────────────────────────────────────────────
+
+  static ThemeData get dark {
+    final colorScheme = ColorScheme.dark(
+      primary: const Color(0xFFA5CDB6), // Luminous sage
+      onPrimary: AppColors.graphite,
+      secondary: AppColors.softSage,
+      onSecondary: AppColors.white,
+      surface: const Color(0xFF1E2623),
+      onSurface: const Color(0xFFEAF2ED),
+      error: AppColors.error,
+      onError: AppColors.white,
+      outline: const Color(0xFF384E49),
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      fontFamily: AppTypography.fontFamily,
+      scaffoldBackgroundColor: const Color(0xFF161C19),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF161C19),
+        foregroundColor: Color(0xFFEAF2ED),
+        elevation: 0,
+      ),
+      cardTheme: CardThemeData(
+        color: const Color(0xFF1E2623),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppSpacing.borderRadiusCard,
+        ),
+      ),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────
   //  High Contrast Theme (accessibility)
   // ──────────────────────────────────────────────────────────
 

@@ -20,20 +20,27 @@ void main() async {
   runApp(const ProviderScope(child: VachikaApp()));
 }
 
+/// Global provider to toggle between Light and Dark mode.
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
+
 /// Root application widget.
 ///
 /// Wraps the app in [ProviderScope] for Riverpod state management,
 /// applies the VACHIKA design-system theme, and uses GoRouter
 /// for declarative navigation.
-class VachikaApp extends StatelessWidget {
+class VachikaApp extends ConsumerWidget {
   const VachikaApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return MaterialApp.router(
       title: 'VACHIKA',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
       highContrastTheme: AppTheme.highContrast,
       routerConfig: appRouter,
     );

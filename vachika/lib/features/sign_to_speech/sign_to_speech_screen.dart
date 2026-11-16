@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/primary_button.dart';
+import '../history/widgets/history_drawer.dart';
 
 /// Sign to Speech screen.
 ///
@@ -25,7 +26,17 @@ class _SignToSpeechScreenState extends State<SignToSpeechScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign to Speech')),
+      drawer: const HistoryDrawer(),
+      appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            tooltip: 'Past History',
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        title: const Text('Sign to Speech'),
+      ),
       body: SafeArea(
         child: Padding(
           padding: AppSpacing.screenPadding,

@@ -7,9 +7,9 @@ import '../../features/auth/screens/cover_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/conversation/conversation_screen.dart';
 import '../../features/sign_to_speech/sign_to_speech_screen.dart';
 import '../../features/speech_to_sign/speech_to_sign_screen.dart';
-import '../../features/conversation/conversation_screen.dart';
 import '../../features/dictionary/dictionary_screen.dart';
 import '../../features/history/history_screen.dart';
 import '../../features/settings/settings_screen.dart';
@@ -24,20 +24,22 @@ class AppRoutes {
   static const String login        = '/login';
   static const String signUp       = '/signup';
   static const String onboarding   = '/onboarding';
-  static const String home         = '/home';
-  static const String signToSpeech = '/sign-to-speech';
-  static const String speechToSign = '/speech-to-sign';
+
+  // ── Primary App Features (Bottom Navbar Tabs) ─────────────
   static const String conversation = '/conversation';
+  static const String signToSpeech = '/sign-to-speech';
+  static const String textToSign   = '/text-to-sign';
+  static const String profile      = '/profile';
+
+  // ── Standalone & Legacy Aliases ───────────────────────────
+  static const String home         = '/home';
+  static const String speechToSign = '/speech-to-sign';
   static const String dictionary   = '/dictionary';
   static const String history      = '/history';
   static const String settings     = '/settings';
 }
 
 /// Application router configuration using GoRouter.
-///
-/// Navigation is shallow (per DESIGN.md §4):
-/// Bottom bar: Home · Dictionary · History · Settings
-/// Feature screens are pushed from Home.
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
   routes: [
@@ -62,30 +64,48 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const OnboardingScreen(),
     ),
 
-    // ── Shell with Bottom Navigation ─────────────────────────
+    // ── Home redirects directly to Conversation Mode ──────────
+    GoRoute(
+      path: AppRoutes.home,
+      redirect: (context, state) => AppRoutes.conversation,
+    ),
+    GoRoute(
+      path: AppRoutes.speechToSign,
+      redirect: (context, state) => AppRoutes.textToSign,
+    ),
+    GoRoute(
+      path: AppRoutes.settings,
+      redirect: (context, state) => AppRoutes.profile,
+    ),
+
+    // ── Shell with 4 Primary Feature Tabs ────────────────────
     ShellRoute(
       builder: (context, state, child) => _ScaffoldWithNav(child: child),
       routes: [
+        // Tab 0: Conversation Mode
         GoRoute(
-          path: AppRoutes.home,
+          path: AppRoutes.conversation,
           pageBuilder: (context, state) => const NoTransitionPage(
-            child: HomeScreen(),
+            child: ConversationScreen(),
           ),
         ),
+        // Tab 1: Sign to Speech
         GoRoute(
-          path: AppRoutes.dictionary,
+          path: AppRoutes.signToSpeech,
           pageBuilder: (context, state) => const NoTransitionPage(
-            child: DictionaryScreen(),
+            child: SignToSpeechScreen(),
           ),
         ),
+        // Tab 2: Text to Sign
         GoRoute(
-          path: AppRoutes.history,
+          path: AppRoutes.textToSign,
           pageBuilder: (context, state) => const NoTransitionPage(
-            child: HistoryScreen(),
+            child: SpeechToSignScreen(),
           ),
         ),
+        // Tab 3: Profile & Settings
         GoRoute(
-          path: AppRoutes.settings,
+          path: AppRoutes.profile,
           pageBuilder: (context, state) => const NoTransitionPage(
             child: SettingsScreen(),
           ),
@@ -93,18 +113,14 @@ final GoRouter appRouter = GoRouter(
       ],
     ),
 
-    // ── Feature screens (pushed on top of shell) ─────────────
+    // ── Standalone Feature Pages ──────────────────────────────
     GoRoute(
-      path: AppRoutes.signToSpeech,
-      builder: (context, state) => const SignToSpeechScreen(),
+      path: AppRoutes.dictionary,
+      builder: (context, state) => const DictionaryScreen(),
     ),
     GoRoute(
-      path: AppRoutes.speechToSign,
-      builder: (context, state) => const SpeechToSignScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.conversation,
-      builder: (context, state) => const ConversationScreen(),
+      path: AppRoutes.history,
+      builder: (context, state) => const HistoryScreen(),
     ),
   ],
 );
@@ -117,10 +133,26 @@ class _ScaffoldWithNav extends StatelessWidget {
   final Widget child;
 
   static const _tabs = [
-    (route: AppRoutes.home,       icon: Icons.home_rounded,          label: 'Home'),
-    (route: AppRoutes.dictionary, icon: Icons.menu_book_rounded,     label: 'Dictionary'),
-    (route: AppRoutes.history,    icon: Icons.history_rounded,       label: 'History'),
-    (route: AppRoutes.settings,   icon: Icons.settings_rounded,     label: 'Settings'),
+    (
+      route: AppRoutes.conversation,
+      icon: Icons.forum_rounded,
+      label: 'Conversation',
+    ),
+    (
+      route: AppRoutes.signToSpeech,
+      icon: Icons.back_hand_rounded,
+      label: 'Sign → Speech',
+    ),
+    (
+      route: AppRoutes.textToSign,
+      icon: Icons.translate_rounded,
+      label: 'Text → Sign',
+    ),
+    (
+      route: AppRoutes.profile,
+      icon: Icons.person_rounded,
+      label: 'Profile',
+    ),
   ];
 
   int _currentIndex(BuildContext context) {

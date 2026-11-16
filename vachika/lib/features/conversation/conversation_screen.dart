@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/primary_button.dart';
+import '../history/widgets/history_drawer.dart';
 
 /// Conversation Mode screen.
 ///
@@ -30,8 +31,16 @@ class _ConversationScreenState extends State<ConversationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const HistoryDrawer(),
       appBar: AppBar(
-        title: const Text('Conversation'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            tooltip: 'Past History',
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        title: const Text('Conversation Mode'),
         actions: [
           IconButton(
             icon: const Icon(Icons.swap_horiz_rounded),

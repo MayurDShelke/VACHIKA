@@ -38,35 +38,106 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showSignOutDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Sign Out?'),
-        content: const Text(
-          'Are you sure you want to sign out from VACHIKA? Your local history will remain saved.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.graphite)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.error.withValues(alpha: 0.12),
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: AppColors.error,
+                  size: 26,
+                ),
               ),
-            ),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await ref.read(authNotifierProvider.notifier).signOut();
-              if (mounted) {
-                context.go(AppRoutes.login);
-              }
-            },
-            child: const Text('Sign Out'),
+              const SizedBox(height: 18),
+              const Text(
+                'Sign Out?',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1E2321),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Are you sure you want to sign out from VACHIKA? Your local history will remain saved.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF6B7280),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        side: const BorderSide(
+                          color: Color(0xFFD1D5DB),
+                          width: 1.2,
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF374151),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        await ref.read(authNotifierProvider.notifier).signOut();
+                        if (mounted) {
+                          context.go(AppRoutes.login);
+                        }
+                      },
+                      child: const Text(
+                        'Sign Out',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -125,7 +196,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 LanguageSelector(
-                  selectedLanguage: _language,
+                  selected: _language,
                   onChanged: (lang) {
                     setState(() => _language = lang);
                     setModalState(() {});

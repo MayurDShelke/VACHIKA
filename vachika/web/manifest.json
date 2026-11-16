@@ -1,11 +1,11 @@
 {
-    "name": "vachika",
-    "short_name": "vachika",
+    "name": "VACHIKA",
+    "short_name": "VACHIKA",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#203630",
+    "theme_color": "#2D5A4C",
+    "description": "VACHIKA — Every Expression Deserves a Voice. AI-powered two-way Indian Sign Language communication app.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

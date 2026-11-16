@@ -8,16 +8,15 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/slide_action_slider.dart';
-import '../providers/auth_provider.dart';
 import '../widgets/cover_collage_header.dart';
 
 /// Cover page / Landing screen for VACHIKA.
 ///
 /// Features:
-/// - Rich multi-stop ambient gradient background.
-/// - Angled isometric cards collage dissolving via ShaderMask into the gradient.
-/// - Prominent, well-spaced typography with the official tagline.
-/// - Strictly bottom-docked slide-to-action slider.
+/// - Horizontal marquee cards continuously moving from left to right.
+/// - Clean, harmonious spacing between header, typography, and slider.
+/// - Large, hyper-realistic Apple Liquid Glass slider with circular glass lens puck.
+/// - Zero overflow on all screen sizes and aspect ratios.
 class CoverScreen extends ConsumerStatefulWidget {
   const CoverScreen({super.key});
 
@@ -35,17 +34,17 @@ class _CoverScreenState extends ConsumerState<CoverScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
-        // ── Rich, Clearly Visible Multi-Stop Brand Gradient ──
+        // ── Brand Gradient transitioning to Moody Slate-Sage at Bottom ──
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.0, 0.32, 0.68, 1.0],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.0, 0.35, 0.68, 1.0],
             colors: [
-              Color(0xFFC7E2D3), // Fresh pastel sage mint
-              Color(0xFFDBEBE0), // Luminous jade tone
-              Color(0xFFF3F6F2), // Light crisp porcelain
-              Color(0xFFE9E0D0), // Warm pearl champagne ivory
+              Color(0xFFD6E8DE), // Fresh luminous pastel sage (top)
+              Color(0xFFEAF2ED), // Soft porcelain mist (middle)
+              Color(0xFF638079), // Atmospheric mineral transition
+              Color(0xFF384E49), // Deep slate-sage (bottom backdrop for glass)
             ],
           ),
         ),
@@ -89,131 +88,129 @@ class _CoverScreenState extends ConsumerState<CoverScreen> {
               ),
             ),
 
-            // ── Glowing Ambient Orb 3 (Bottom Left) ──────────
+            // ── Glowing Ambient Orb 3 (Bottom Ambient Specular Glow) ──
             Positioned(
-              bottom: 40,
-              left: -30,
+              bottom: 25,
+              left: 20,
+              right: 20,
               child: Container(
-                width: 200,
-                height: 200,
+                height: 120,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(60),
                   gradient: RadialGradient(
+                    radius: 1.2,
                     colors: [
-                      const Color(0xFFDECDB5).withValues(alpha: 0.40),
-                      const Color(0xFFDECDB5).withValues(alpha: 0.0),
+                      const Color(0xFF6C8C84).withValues(alpha: 0.60),
+                      const Color(0xFF6C8C84).withValues(alpha: 0.0),
                     ],
                   ),
                 ),
               ),
             ),
 
-            // ── Main Layout: Content + Bottom Docked Slider ───
-            Column(
-              children: [
-                // ── Top & Middle Content (Scrollable if needed) ─
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Tilted visual collage header (fades to transparent)
-                        const CoverCollageHeader(),
+            // ── Main Content Layout ───────────────────────────
+            SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
 
-                        // Spacing pushing the text downward as requested
-                        const SizedBox(height: 38),
+                  // 1. Diagonal cards marquee ascending from left-mid-bottom to top-right
+                  const CoverCollageHeader(height: 260),
 
-                        // Typography & Branding
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xl,
-                          ),
-                          child: Column(
-                            children: [
-                              // "Welcome to VACHIKA"
-                              RichText(
-                                textAlign: TextAlign.center,
-                                text: TextSpan(
-                                  style: AppTypography.mainHeading.copyWith(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.18,
-                                    color: AppColors.graphite,
-                                    letterSpacing: -0.5,
-                                  ),
-                                  children: [
-                                    const TextSpan(text: 'Welcome to\n'),
-                                    TextSpan(
-                                      text: AppConstants.appName,
-                                      style: TextStyle(
-                                        color: AppColors.forestSage,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 0.8,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(height: AppSpacing.md),
-
-                              // Official Tagline
-                              Text(
-                                AppConstants.tagline,
-                                style: AppTypography.body.copyWith(
-                                  color: AppColors.graphite,
+                  // 2. Middle Content (Typography & Tagline) flexibly centered
+                  Expanded(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xl,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Headline: "Welcome to VACHIKA"
+                            RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: AppTypography.mainHeading.copyWith(
+                                  fontSize: 32,
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 16,
-                                  letterSpacing: 0.1,
+                                  height: 1.15,
+                                  color: AppColors.graphite,
+                                  letterSpacing: -0.5,
                                 ),
-                                textAlign: TextAlign.center,
+                                children: [
+                                  const TextSpan(text: 'Welcome to\n'),
+                                  TextSpan(
+                                    text: AppConstants.appName,
+                                    style: TextStyle(
+                                      color: AppColors.forestSage,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ],
                               ),
+                            ),
 
-                              const SizedBox(height: AppSpacing.xs),
+                            const SizedBox(height: 12),
 
-                              // Supporting description
-                              Text(
-                                'Your AI companion for seamless two-way Indian Sign Language communication.',
+                            // Official Tagline
+                            Text(
+                              AppConstants.tagline,
+                              style: AppTypography.body.copyWith(
+                                color: AppColors.graphite,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                letterSpacing: 0.1,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            // Supporting subtitle
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.sm,
+                              ),
+                              child: Text(
+                                'Your AI companion for seamless two-way\nIndian Sign Language communication.',
                                 style: AppTypography.supporting.copyWith(
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.graphite
+                                      .withValues(alpha: 0.72),
                                   fontSize: 13,
                                   height: 1.45,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-
-                              const SizedBox(height: AppSpacing.xl),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
 
-                // ── Bottom Docked Slider & Actions ─────────────
-                SafeArea(
-                  top: false,
-                  child: Padding(
+                  // 3. Large Apple Liquid Glass Slider docked cleanly at bottom
+                  Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.lg,
-                      AppSpacing.xs,
+                      8,
                       AppSpacing.lg,
-                      AppSpacing.lg,
+                      24,
                     ),
                     child: SlideActionSlider(
                       text: 'Slide to Sign In',
                       thumbIcon: Icons.arrow_forward_rounded,
                       sliderColor: AppColors.forestSage,
-                      textColor: AppColors.graphite,
+                      textColor: Colors.white,
                       isGlass: true,
-                      height: 62,
+                      height: 74,
                       onSlideComplete: _navigateToLogin,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

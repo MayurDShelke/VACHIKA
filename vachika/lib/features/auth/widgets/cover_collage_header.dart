@@ -3,29 +3,64 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// Tilted visual collage of rounded cards displaying VACHIKA capabilities.
+/// Diagonal moving cards marquee that smoothly scrolls from left-mid-bottom to top-right.
 ///
-/// Uses [ShaderMask] with [BlendMode.dstIn] so the cards themselves
-/// dissolve into pure transparency, letting the background gradient
-/// flow through completely without any opaque block overlays.
-class CoverCollageHeader extends StatelessWidget {
-  const CoverCollageHeader({super.key});
+/// Features:
+/// - Enlarged card sizing for high visual presence and readability.
+/// - Angular slant (~ -8.6 degrees) ascending diagonally from lower-left to upper-right.
+/// - Seamless infinite marquee loop with zero layout overflow or disappearances.
+/// - Dissolving [ShaderMask] fading cards softly into the background gradient at the bottom.
+class CoverCollageHeader extends StatefulWidget {
+  const CoverCollageHeader({
+    super.key,
+    this.height = 250,
+    this.tiltAngle = -0.15, // ~ -8.6 degrees ascending towards top-right
+  });
+
+  final double height;
+  final double tiltAngle;
+
+  @override
+  State<CoverCollageHeader> createState() => _CoverCollageHeaderState();
+}
+
+class _CoverCollageHeaderState extends State<CoverCollageHeader>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  // Larger card dimensions: width 230, height 108, gap 14.
+  // 3 distinct cards in one repeat cycle = (230 + 14) * 3 = 732.0
+  static const double _cardWidth = 230.0;
+  static const double _cardHeight = 108.0;
+  static const double _cardGap = 14.0;
+  static const double _cycleWidth = (_cardWidth + _cardGap) * 3;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 22),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final collageHeight = (screenHeight * 0.44).clamp(320.0, 410.0);
-
     return SizedBox(
-      height: collageHeight,
-      width: screenWidth,
+      height: widget.height,
+      width: double.infinity,
       child: ShaderMask(
         shaderCallback: (Rect bounds) {
           return const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            stops: [0.0, 0.55, 0.96],
+            stops: [0.0, 0.70, 1.0],
             colors: [
               Colors.black,
               Colors.black,
@@ -34,54 +69,95 @@ class CoverCollageHeader extends StatelessWidget {
           ).createShader(bounds);
         },
         blendMode: BlendMode.dstIn,
-        child: Stack(
-          clipBehavior: Clip.hardEdge,
-          children: [
-            // ── Tilted Cards Grid ──────────────────────────────
-            Positioned(
-              top: -45,
-              left: -screenWidth * 0.16,
-              right: -screenWidth * 0.16,
-              bottom: 10,
-              child: Transform.rotate(
-                angle: -0.22, // ~12.6 degrees tilt
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Left Column ────────────────────────────
-                    Expanded(
+        child: ClipRect(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final screenWidth = constraints.maxWidth;
+              // Base left offset placing center of 5 cycles near center of screen
+              final baseLeft = (screenWidth / 2) - (_cycleWidth * 2.5);
+
+              return AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  final progress = _controller.value;
+                  // As progress moves 0 -> 1, cards translate smoothly to the right
+                  final dxRow1 = progress * _cycleWidth;
+                  final dxRow2 = (((progress + 0.5) % 1.0) * _cycleWidth);
+
+                  return Transform.rotate(
+                    angle: widget.tiltAngle,
+                    alignment: Alignment.center,
+                    child: Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const SizedBox(height: 28),
-                          _buildLogoCard(),
-                          const SizedBox(height: 14),
-                          _buildVoiceCard(),
+                          // ── Row 1: Diagonal Stream (Upper Row) ───────────
+                          SizedBox(
+                            height: _cardHeight,
+                            width: screenWidth,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Positioned(
+                                  left: baseLeft + dxRow1,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      for (int i = 0; i < 5; i++) ...[
+                                        _buildLogoCard(),
+                                        const SizedBox(width: _cardGap),
+                                        _buildSignCard(),
+                                        const SizedBox(width: _cardGap),
+                                        _buildVoiceCard(),
+                                        const SizedBox(width: _cardGap),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // ── Row 2: Diagonal Stream (Lower Staggered Row) ──
+                          SizedBox(
+                            height: _cardHeight,
+                            width: screenWidth,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Positioned(
+                                  left: baseLeft + dxRow2,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      for (int i = 0; i < 5; i++) ...[
+                                        _buildVisionCard(),
+                                        const SizedBox(width: _cardGap),
+                                        _buildConversationCard(),
+                                        const SizedBox(width: _cardGap),
+                                        _buildDictionaryCard(),
+                                        const SizedBox(width: _cardGap),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
-
-                    const SizedBox(width: 14),
-
-                    // ── Right Column ───────────────────────────
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildSignCard(),
-                          const SizedBox(height: 14),
-                          _buildVisionCard(),
-                          const SizedBox(height: 14),
-                          _buildConversationCard(),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -90,61 +166,71 @@ class CoverCollageHeader extends StatelessWidget {
   // ── Card 1: Official VACHIKA Logo Card ──────────────────────
   Widget _buildLogoCard() {
     return Container(
-      height: 170,
+      width: _cardWidth,
+      height: _cardHeight,
       decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(28),
+        color: AppColors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.8),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(18),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Image.asset(
-                'assets/images/vachika_logo.png',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 68,
-                  height: 68,
-                  decoration: BoxDecoration(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: AppColors.forestSage.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.all(6),
+            child: Image.asset(
+              'assets/images/vachika_logo.png',
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.sign_language_rounded,
+                color: AppColors.forestSage,
+                size: 28,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'VACHIKA AI',
+                  style: AppTypography.cardHeading.copyWith(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
                     color: AppColors.forestSage,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(
-                    Icons.sign_language_rounded,
-                    size: 38,
-                    color: AppColors.white,
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.stone.withValues(alpha: 0.8),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'VACHIKA AI',
-                style: AppTypography.label.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 10,
-                  letterSpacing: 1.0,
-                  color: AppColors.forestSage,
+                const SizedBox(height: 2),
+                Text(
+                  'Indian Sign AI',
+                  style: AppTypography.supporting.copyWith(
+                    fontSize: 11.5,
+                    color: AppColors.graphite.withValues(alpha: 0.75),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -152,91 +238,86 @@ class CoverCollageHeader extends StatelessWidget {
   // ── Card 2: ISL Hand Sign Dark Card ────────────────────────
   Widget _buildSignCard() {
     return Container(
-      height: 150,
+      width: _cardWidth,
+      height: _cardHeight,
       decoration: BoxDecoration(
         color: AppColors.graphite,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.graphite.withValues(alpha: 0.28),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: AppColors.graphite.withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
-      child: Stack(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
         children: [
-          Positioned(
-            right: -6,
-            bottom: -6,
-            child: Icon(
-              Icons.sign_language_rounded,
-              size: 70,
-              color: Colors.white.withValues(alpha: 0.08),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.forestSage,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Icon(
+              Icons.back_hand_rounded,
+              color: AppColors.white,
+              size: 24,
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: AppColors.forestSage,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.back_hand_rounded,
-                      color: AppColors.white,
-                      size: 18,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'ISL',
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Indian Sign',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Indian Sign',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14.5,
+                    const SizedBox(width: 5),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: const Text(
+                        'ISL',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '20+ Signs • Isolated',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.72),
+                    fontSize: 11,
                   ),
-                  Text(
-                    '20+ Signs • No Sign',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 10.5,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -246,62 +327,62 @@ class CoverCollageHeader extends StatelessWidget {
   // ── Card 3: Voice / Speech Recognition ──────────────────────
   Widget _buildVoiceCard() {
     return Container(
-      height: 140,
+      width: _cardWidth,
+      height: _cardHeight,
       decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(28),
+        color: AppColors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.8),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 14,
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 16,
             offset: const Offset(0, 6),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.forestSage.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.mic_rounded,
-                  color: AppColors.forestSage,
-                  size: 18,
-                ),
-              ),
-              const Spacer(),
-              const Icon(
-                Icons.graphic_eq_rounded,
-                color: AppColors.forestSage,
-                size: 22,
-              ),
-            ],
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.forestSage.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Icon(
+              Icons.mic_rounded,
+              color: AppColors.forestSage,
+              size: 24,
+            ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Speech to Sign',
-                style: AppTypography.cardHeading.copyWith(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Speech to Sign',
+                  style: AppTypography.cardHeading.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Whisper ASR • en/hi/mr',
-                style: AppTypography.supporting.copyWith(fontSize: 10.5),
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text(
+                  'Whisper ASR • en/hi/mr',
+                  style: AppTypography.supporting.copyWith(
+                    fontSize: 11,
+                    color: AppColors.graphite.withValues(alpha: 0.75),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -311,71 +392,85 @@ class CoverCollageHeader extends StatelessWidget {
   // ── Card 4: AI Landmark Vision Card ─────────────────────────
   Widget _buildVisionCard() {
     return Container(
-      height: 135,
+      width: _cardWidth,
+      height: _cardHeight,
       decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(28),
+        color: AppColors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.8),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.softSage.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(10),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.softSage.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Icon(
+              Icons.center_focus_strong_rounded,
+              color: AppColors.forestSage,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'AI Vision',
+                      style: AppTypography.cardHeading.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: const Text(
+                        '147-pt',
+                        style: TextStyle(
+                          color: AppColors.success,
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Icon(
-                  Icons.center_focus_strong_rounded,
-                  color: AppColors.forestSage,
-                  size: 18,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  '147-pt AI',
-                  style: TextStyle(
-                    color: AppColors.success,
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
+                const SizedBox(height: 2),
+                Text(
+                  'Hands & Pose Points',
+                  style: AppTypography.supporting.copyWith(
+                    fontSize: 11,
+                    color: AppColors.graphite.withValues(alpha: 0.75),
                   ),
                 ),
-              ),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Real-Time Vision',
-                style: AppTypography.cardHeading.copyWith(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              Text(
-                'Hands & Pose Landmarks',
-                style: AppTypography.supporting.copyWith(fontSize: 10.5),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -385,43 +480,125 @@ class CoverCollageHeader extends StatelessWidget {
   // ── Card 5: Conversation Card ──────────────────────────────
   Widget _buildConversationCard() {
     return Container(
-      height: 105,
+      width: _cardWidth,
+      height: _cardHeight,
       decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.graphite,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.graphite.withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: AppColors.forestSage.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+              color: AppColors.forestSage,
+              borderRadius: BorderRadius.circular(15),
             ),
             child: const Icon(
               Icons.people_rounded,
-              color: AppColors.forestSage,
-              size: 18,
+              color: Colors.white,
+              size: 24,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  '2-Way Dialogue',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'One phone, two voices',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.72),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Card 6: Dictionary Card ────────────────────────────────
+  Widget _buildDictionaryCard() {
+    return Container(
+      width: _cardWidth,
+      height: _cardHeight,
+      decoration: BoxDecoration(
+        color: AppColors.stone.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.6),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.forestSage.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Icon(
+              Icons.menu_book_rounded,
+              color: AppColors.forestSage,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '2-Way Dialogue',
+                  'Dictionary',
                   style: AppTypography.cardHeading.copyWith(
-                    fontSize: 12.5,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  'One phone, two voices',
-                  style: AppTypography.supporting.copyWith(fontSize: 10.5),
+                  'Verified ISL Videos',
+                  style: AppTypography.supporting.copyWith(
+                    fontSize: 11,
+                    color: AppColors.graphite.withValues(alpha: 0.75),
+                  ),
                 ),
               ],
             ),

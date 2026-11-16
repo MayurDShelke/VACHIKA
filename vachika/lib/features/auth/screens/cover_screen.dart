@@ -115,7 +115,7 @@ class _CoverScreenState extends ConsumerState<CoverScreen> {
                   const SizedBox(height: 8),
 
                   // 1. Diagonal cards marquee ascending from left-mid-bottom to top-right
-                  const CoverCollageHeader(height: 260),
+                  const CoverCollageHeader(height: 280),
 
                   // 2. Middle Content (Typography & Tagline) flexibly centered
                   Expanded(

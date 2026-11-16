@@ -160,6 +160,44 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Sign In with Google
+  Future<bool> signInWithGoogle() async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    try {
+      final user = await _repo.signInWithGoogle();
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        user: user,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
+      return false;
+    }
+  }
+
+  /// Sign In with X (Twitter)
+  Future<bool> signInWithTwitter() async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    try {
+      final user = await _repo.signInWithTwitter();
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        user: user,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
+      return false;
+    }
+  }
+
   /// Send password reset
   Future<bool> sendPasswordReset(String email) async {
     try {

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "338068991963",
+    "project_id": "vachika-514dd",
+    "storage_bucket": "vachika-514dd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:338068991963:android:1b9fc1a06726b46b5401fe",
+        "android_client_info": {
+          "package_name": "com.example.vachika"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "338068991963-70nbqc67395hr774rgeelcl07hpdjg50.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.vachika",
+            "certificate_hash": "7445829b0908056e5df6e77b851e7167dd719aa2"
+          }
+        },
+        {
+          "client_id": "338068991963-iqaknjrh5s4bmvs9dsjdlg06l97ds7e7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnxgVsSB6tF82XxH5-S9WcMT6ns4-yfgk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "338068991963-iqaknjrh5s4bmvs9dsjdlg06l97ds7e7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "338068991963-lr7u23hcr85p9q2snjifj9stdbjmt536.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.vachika"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
